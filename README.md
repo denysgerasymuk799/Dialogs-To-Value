@@ -1,1 +1,1 @@
-# Telegram dialogues analysis
+# Telegram dialogs analysis
