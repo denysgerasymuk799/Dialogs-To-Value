@@ -5,6 +5,7 @@ config/config.json
 
 .idea/
 
+*.csv
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
