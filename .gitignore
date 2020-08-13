@@ -3,6 +3,7 @@ data/dialogs/*
 tmp.session
 config/config.json
 
+data/
 .idea/
 
 *.csv
