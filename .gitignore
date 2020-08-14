@@ -1,4 +1,5 @@
 data/dialogs/*
+data/*
 
 tmp.session
 config/config.json
