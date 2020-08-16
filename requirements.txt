@@ -1,0 +1,10 @@
+pandas~=0.25.3
+numpy~=1.17.0
+nltk~=3.4
+word2number~=1.1
+num2words~=0.5.10
+pymorphy2~=0.8
+pip~=20.2.2
+tokenize_uk~=0.2.0
+matplotlib~=3.3.1
+scikit-learn~=0.23.2
