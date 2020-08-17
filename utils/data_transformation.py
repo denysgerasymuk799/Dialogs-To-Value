@@ -195,7 +195,7 @@ def lemmatization(msg, lang, cube):
     if lang == "ru":
         lemmas = " ".join(pymorphy2.MorphAnalyzer().parse(np.unicode(word))[0].normal_form for word in msg.split())
 
-    elif lang == "ua":
+    elif lang in ("ua", "en"):
         sentences = cube(msg)
 
         for sentence in sentences:  # note we selected the first sentence (sentence[0])
@@ -251,9 +251,9 @@ def prepare_dialogs(dialog_id, dialog_path, prep_path, date_before, date_after, 
         cube = Cube(verbose=True)
         cube.load("uk")
 
-    elif lang == "ru":
+    elif lang == "en":
         cube = Cube(verbose=True)
-        cube.load("ru")
+        cube.load("en")
 
     for i in data.index:
         date_time = data["date"][i][:-6]
