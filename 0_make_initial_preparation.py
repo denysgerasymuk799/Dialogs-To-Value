@@ -2,7 +2,7 @@ import os
 import logging
 import argparse
 import pandas as pd
-from utils.data_transformation import prepare_message
+from utils.data_transformation import prepare_message, add_subdialogs_ids, add_reply_time
 
 
 def init_tool_config_arg():
@@ -34,6 +34,8 @@ def read_dialogs(dialog_id: str, dialog_path: str, prep_path: str) -> None:
     data = pd.read_csv(f'{dialog_path}{dialog_id}.csv')
     for i in data.index:
         data.loc[i, 'message'] = prepare_message(data.loc[i, 'message'])
+    data = add_reply_time(data)
+    data = add_subdialogs_ids(data)
     data.to_csv(f'{prep_path}{dialog_id}.csv')
 
 
