@@ -78,32 +78,36 @@ def convert_numbers(data, function_type):
     return new_text
 
 
-def remove_stop_words(data, lang):
+def remove_stop_words(data, lang, function=""):
     """
 
     :param lang: "ru", "ua" or "en"
     :return: cleaned text from stop_words
     """
+    stop_words = []
     if lang in ("ru", "ua"):
         stop_words_ru = get_stop_words('russian')
         stop_words_en = get_stop_words('en')
         stop_words_ua = []
 
         try:
-            with open(os.path.join(os.getcwd(), "..", "static", "ukrainian_stopwords.txt"), "r", encoding="utf-8") as file:
+            with open(os.path.join(os.getcwd(), "..", "dicts", "ukrainian_stopwords.txt"), "r", encoding="utf-8") as file:
                 for word in file:
                     stop_words_ua.append(word.strip())
 
         except FileNotFoundError:
-            with open(os.path.join(os.getcwd(), "static", "ukrainian_stopwords.txt"), "r",
+            with open(os.path.join(os.getcwd(), "dicts", "ukrainian_stopwords.txt"), "r",
                       encoding="utf-8") as file:
                 for word in file:
                     stop_words_ua.append(word.strip())
 
         stop_words = stop_words_ru + stop_words_ua + stop_words_en
 
-    else:
+    elif lang == "en":
         stop_words = get_stop_words('en')
+
+    if function == "get_stop_words":
+        return stop_words
 
     words = word_tokenize(str(data))
 
