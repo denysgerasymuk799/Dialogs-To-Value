@@ -28,25 +28,36 @@ def add_reply_time(data):
     :return: DataFrame
     """
     data['reply_time'] = 0
-    i = k = data['id'].count() - 1
-    msg_counter = 0
-    while i > 0 and k > 0:
-        sender = data['from_id'][i]
-        j = i
-        while sender == data['from_id'][j]:
-            j -= 1
-        if j <= 1:
-            break
-        recipient = data['from_id'][j]
-        time_diff = (get_date_from_string(data['date'][j]) - get_date_from_string(data['date'][i])).total_seconds()
-        data['reply_time'][i] += time_diff
-        k = j
-        msg_counter += 1
-        while recipient == data['from_id'][k]:
-            k -= 1
-        i = k + 1
+    
+    
+    try:
+        i = k = data['id'].count() - 1
+        msg_counter = 0
+        while i > 0 and k > 0:
+            sender = data['from_id'][i]
 
+            j = i
+            while sender == data['from_id'][j]:
+                j -= 1
+            if j <= 1:
+                break
 
+            recipient = data['from_id'][j]
+            time_diff = (get_date_from_string(data['date'][j]) - get_date_from_string(data['date'][i])).total_seconds()
+            data['reply_time'][i] += time_diff
+            k = j
+            msg_counter += 1
+
+            while recipient == data['from_id'][k]:
+                k -= 1
+            i = k + 1
+        
+    except KeyError as e:
+#         TODO: pls fix this error with key logic
+        print('KeyError')
+        print(e)
+
+        
 def get_reply_frequency(data):
     """
     Counts number of messages with ~same reply_time

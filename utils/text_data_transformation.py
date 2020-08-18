@@ -51,20 +51,3 @@ def delete_apostrophes(msg: str) -> str:
     """
     out_msg = re.sub(r"`'ʼ", '', msg)
     return re.sub(r'"', '', out_msg)
-
-
-def prepare_messages(data):
-    """
-    Makes preparation for the given message.
-    :param data: DataFrame
-    :return: None
-    """
-    for i in data.index:
-        out_msg = []
-        for word in str(data.loc[i, 'message']).split():
-            if url_to_domain(word, check=True):
-                out_msg.append(url_to_domain(word))
-            else:
-                word = word_to_num(word)
-                out_msg.append(delete_special_characters(word))
-        data.loc[i, 'message'] = re.sub(r'\s\s+', ' ', ' '.join(out_msg))
