@@ -1,6 +1,7 @@
 data/*
 !data/tmp_static
 logs/*
+logs/project_logs.log
 
 tmp.session
 tmp.session-journal
