@@ -1,5 +1,8 @@
 import datetime as dat
 import math
+import os
+
+import pandas as pd
 
 
 def get_date_from_string(date_info: str):
@@ -83,3 +86,10 @@ def add_subdialogs_ids(data):
         if reply_time > min_delay and reply_time:
             subdialog_count += 1
         data['subdialog_id'][i] = subdialog_count
+
+
+if __name__ == '__main__':
+    data = pd.read_csv(os.path.join("..", "data", "prepared_dialogs", "347963763.csv"))
+    add_reply_time(data)
+    add_subdialogs_ids(data)
+    print(data)
