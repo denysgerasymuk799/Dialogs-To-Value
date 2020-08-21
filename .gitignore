@@ -1,5 +1,6 @@
 data/*
-!data/tmp_static
+data/tmp_static/*
+
 logs/*
 logs/project_logs.log
 

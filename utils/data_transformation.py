@@ -247,6 +247,8 @@ def prepare_dialogs(dialog_id, dialog_path, prep_path, date_before, date_after, 
     at /data/prepared_dialogs/
     :return: None
     """
+    
+    #TODO: create a new column for preprocessed text. NEVER use the same column for raw and preprocessed data, with such approach you lose information!
     logging.debug(f'Preparing dialog #{dialog_id}.')
 
     data = pd.read_csv(f'{dialog_path}{dialog_id}.csv')
@@ -272,6 +274,9 @@ def prepare_dialogs(dialog_id, dialog_path, prep_path, date_before, date_after, 
                 data.loc[i, 'message'] = transform_raw_data(msg, lang, function_type, cube)
                 print("INDEX", i)
 
+    # you start but you didn't finish?
+    # TODO: use imperative mood -> save dialog!
+    
     logging.warning("start saving")
     print("start saving")
     data.to_csv(f'{prep_path}{dialog_id}.csv')
