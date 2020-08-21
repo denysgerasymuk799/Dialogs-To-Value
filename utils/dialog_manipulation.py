@@ -1,8 +1,5 @@
 import datetime as dat
 import math
-import os
-
-import pandas as pd
 
 
 def get_date_from_string(date_info: str):
@@ -34,6 +31,10 @@ def add_reply_time(data):
 
     i = k = data['id'].count() - 1
     msg_counter = 0
+
+    # NEVER ITTERATE THROW PANDAS DF!
+    # TODO: you should use lambda function (apply method) to your DF, it's much faster - https://stackoverflow.com/questions/16353729/why-isnt-my-pandas-apply-function-referencing-multiple-columns-working
+
     while i > 0 and k > 0:
         sender = data['from_id'][i]
         j = i
@@ -42,6 +43,8 @@ def add_reply_time(data):
         if j <= 1:
             break
         recipient = data['from_id'][j]
+
+        # TODO: don't do this transformation each time get_date_from_string(), you should add a new column (previously) with transformed value and use it here directly
         time_diff = (get_date_from_string(data['date'][j]) - get_date_from_string(data['date'][i])).total_seconds()
         data['reply_time'][i] += time_diff
         k = j
@@ -86,10 +89,3 @@ def add_subdialogs_ids(data):
         if reply_time > min_delay and reply_time:
             subdialog_count += 1
         data['subdialog_id'][i] = subdialog_count
-
-
-if __name__ == '__main__':
-    data = pd.read_csv(os.path.join("..", "data", "prepared_dialogs", "347963763.csv"))
-    add_reply_time(data)
-    add_subdialogs_ids(data)
-    print(data)
