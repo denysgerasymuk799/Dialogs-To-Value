@@ -81,8 +81,8 @@ if not os.path.exists(path_to_static + dialog_id):
 # 4) change "ua" to a language of your dialog ("ua", "ru" or "en")
 # if you write "ua" or "ru" - dialog will be cleaned from stop_words_ua + stop_words_ru + stop_words_en
 # so do not bother about these languages if you can not write an exactly language of the dialog
-# prepare_dialogs(dialog_id, dialog_path, prep_path, date_before,
-#                 date_after, "ru", "words_frequency")
+prepare_dialogs(dialog_id, dialog_path, prep_path, date_before,
+                date_after, "ru", "words_frequency")
 
 dialog_data = pd.read_csv(prep_path + dialog_id + ".csv")
 
