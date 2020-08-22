@@ -1,5 +1,5 @@
 data/*
-data/tmp_static/*
+data/processed_dialog_files/*
 
 logs/*
 logs/project_logs.log

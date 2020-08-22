@@ -3,6 +3,7 @@ import datetime
 import logging
 import os
 import re
+from pprint import pprint
 
 import numpy as np
 import pandas as pd
@@ -24,7 +25,7 @@ def init_tool_config_arg():
         nargs="+",
         type=int,
         help="id(s) of dialog(s) to download, -1 for all",
-        required=True,
+        required=False,
     )
     parser.add_argument(
         "--config_path",
@@ -36,19 +37,19 @@ def init_tool_config_arg():
     return parser.parse_args()
 
 
-def if_in_date_range(date_time, date_before, date_after):
+def if_in_date_range(date_time, START_DATE, END_DATE):
     """
 
     :param date_time: msg datetime type
-    :return: if msg in range (date_before, date_after)
+    :return: if msg in range (START_DATE, END_DATE)
     """
     dialog_datetime = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
 
-    if date_before < dialog_datetime < date_after:
+    if START_DATE < dialog_datetime < END_DATE:
         return True
 
-    if dialog_datetime >= date_after:
-        return 'Dialog after date_after'
+    if dialog_datetime >= END_DATE:
+        return 'Dialog after END_DATE'
 
     return False
 
@@ -240,7 +241,60 @@ def transform_raw_data(msg, lang, function_type, cube):
     return msg
 
 
-def prepare_dialogs(dialog_id, dialog_path, prep_path, date_before, date_after, lang,
+def detect_data_language(data):
+    key_letters = {
+        "ua": {
+            "є": 0, "і": 0, "ї": 0, "б": 0, "д": 0, "г": 0, "п": 0, "ц": 0, "я": 0, "ю": 0,
+            "total": 0
+        },
+        "ru": {
+            "ё": 0, "б": 0, "д": 0, "г": 0, "п": 0, "ц": 0, "я": 0, "ю": 0, "ы": 0, "э": 0,
+            "total": 0
+        },
+        "en": {
+            "d": 0, "f": 0, "g": 0, "j": 0, "q": 0, "r": 0, "s": 0, "v": 0, "w": 0, "z": 0,
+            "total": 0
+        }
+    }
+    dialog_step_msgs = []
+    if data.index[-1] < 149:
+        msgs_step = 1
+
+    else:
+        # in such way with msgs_step I can get 150 messages
+        # which are at the different parts of the dialog, so
+        # when I analyse there 150 msgs I can get a real language
+        msgs_step = data.index[-1] // 150
+
+    for i in range(0, data.index[-1], msgs_step):
+        dialog_step_msgs.append(data['message'][i])
+
+    for msg in dialog_step_msgs:
+        if not pd.isnull(msg):
+            for letter in msg:
+                if letter in key_letters["ua"]:
+                    lang = "ua"
+                    key_letters[lang][letter] += 1
+
+                if letter in key_letters["ru"]:
+                    lang = "ru"
+                    key_letters[lang][letter] += 1
+
+                elif letter in key_letters["en"]:
+                    lang = "en"
+                    key_letters[lang][letter] += 1
+
+    mx_total, mx_total_lang = 0, ''
+    for lang in key_letters.keys():
+        key_letters[lang]["total"] = sum(key_letters[lang].values())
+        if key_letters[lang]["total"] >= mx_total:
+            mx_total_lang = lang
+            mx_total = key_letters[lang]["total"]
+
+    return mx_total_lang
+
+
+def prepare_dialogs(lang, cube,  dialog_id, prep_path, dialog_path, start_date, end_date,
                     function_type=""):
     """
     Reads raw csv data and creates prepared copy
@@ -250,36 +304,70 @@ def prepare_dialogs(dialog_id, dialog_path, prep_path, date_before, date_after, 
     
     #TODO: create a new column for preprocessed text. NEVER use the same column for raw and preprocessed data, with such approach you lose information!
     logging.debug(f'Preparing dialog #{dialog_id}.')
-
     data = pd.read_csv(f'{dialog_path}{dialog_id}.csv')
-    cube = ""
-    if lang == "ua":
-        cube = Cube(verbose=True)
-        cube.load("uk")
 
-    elif lang == "en":
-        cube = Cube(verbose=True)
-        cube.load("en")
-
+    preprocessed_text_lst = []
     for i in data.index:
         date_time = data["date"][i][:-6]
         dialog_datetime = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
 
-        if dialog_datetime <= date_before:
-            break
+        # if dialog_datetime <= START_DATE:
+        #     break
 
-        elif date_before < dialog_datetime < date_after:
-            msg = data.loc[i, 'message']
+        msg = data.loc[i, 'message']
+
+        if start_date < dialog_datetime < end_date:
             if not pd.isnull(msg):
-                data.loc[i, 'message'] = transform_raw_data(msg, lang, function_type, cube)
+                msg = transform_raw_data(msg, lang, function_type, cube)
                 print("INDEX", i)
 
-    # you start but you didn't finish?
-    # TODO: use imperative mood -> save dialog!
-    
-    logging.warning("start saving")
-    print("start saving")
+        preprocessed_text_lst.append(msg)
+
+    data["preprocessed_message"] = preprocessed_text_lst
     data.to_csv(f'{prep_path}{dialog_id}.csv')
+    logging.warning("saved dialog!")
+
+
+def prepare_dialogs_sorted_by_lang(dialog_ids, dialog_path, start_date, end_date):
+    dialog_ids_sorted_by_lang = {
+        "ua": [],
+        "ru": [],
+        "en": []
+    }
+    if dialog_ids[0] == -1:
+        for filename in os.listdir(dialog_path):
+            data = pd.read_csv(f'{dialog_path}{filename}')
+            lang = detect_data_language(data)
+            dialog_ids_sorted_by_lang[lang].append(filename[:-4])
+
+    else:
+        for dialog in dialog_ids:
+            data = pd.read_csv(f'{dialog_path}{dialog}.csv')
+            lang = detect_data_language(data)
+            dialog_ids_sorted_by_lang[lang].append(dialog)
+
+    print("dialog_ids_sorted_by_lang")
+    pprint(dialog_ids_sorted_by_lang)
+    n_all_dialogs = sum([len(dialog_ids_sorted_by_lang[lang]) for lang in dialog_ids_sorted_by_lang.keys()])
+    n_dialog = 0
+    for lang in dialog_ids_sorted_by_lang.keys():
+        if not dialog_ids_sorted_by_lang[lang]:
+            continue
+
+        cube = ''
+        if lang == "ua":
+            cube = Cube(verbose=True)
+            cube.load("uk")
+
+        elif lang == "en":
+            cube = Cube(verbose=True)
+            cube.load("en")
+
+        for dialog_id in dialog_ids_sorted_by_lang[lang]:
+            n_dialog += 1
+            print(f"\n=======Language {lang} -- {n_dialog} from {n_all_dialogs}=======")
+            prepare_dialogs(lang, cube, dialog_id, PREPARED_PATH, dialog_path, start_date,
+                            end_date, "words_frequency")
 
 
 if __name__ == "__main__":
@@ -289,21 +377,20 @@ if __name__ == "__main__":
     DEBUG_MODE = args.debug_mode
     DIALOG_PATH = '../data/dialogs/'
     PREPARED_PATH = '../data/prepared_dialogs/'
+    LOGS_PATH = '../logs/project_logs.log'
 
     if DEBUG_MODE:
-        logging.basicConfig(filename='../logs/project_logs.log', level=logging.DEBUG)
-        # logging.basicConfig(filename='../logs/project_logs.log', level=1)
+        logging.basicConfig(filename=LOGS_PATH, level=logging.DEBUG)
 
     if os.path.isdir(DIALOG_PATH):
         if not os.path.isdir(PREPARED_PATH):
             os.mkdir(PREPARED_PATH)
 
-        # change to date range in what you want to analyse messages of user_id_get_msg - from date_before to date_after;
+        # change to date range in what you want to analyse messages of user_id_get_msg - from START_DATE to END_DATE;
         # format "%Y-%m-%d %H:%M:%S"
-        # date_before = datetime.datetime(2020, 5, 9, 0, 0, 0)
-        # date_after = datetime.datetime(2020, 8, 10, 0, 0, 0)
-        for dialog in DIALOG_ID:
-            prepare_dialogs(dialog, DIALOG_PATH, PREPARED_PATH, date_before,
-                            date_after, "ua", "words_frequency")
+        START_DATE = datetime.datetime(2020, 8, 9, 0, 0, 0)
+        END_DATE = datetime.datetime(2020, 8, 10, 0, 0, 0)
+        prepare_dialogs_sorted_by_lang(DIALOG_ID, DIALOG_PATH, START_DATE, END_DATE)
+
     else:
         logging.error('Dialogs dir does not exist !')
