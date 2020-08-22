@@ -284,6 +284,8 @@ def detect_data_language(data):
                     lang = "en"
                     key_letters[lang][letter] += 1
 
+    # get total sum of all values in languages dicts
+    # in key_letters to detect the most common language
     mx_total, mx_total_lang = 0, ''
     for lang in key_letters.keys():
         key_letters[lang]["total"] = sum(key_letters[lang].values())
@@ -298,10 +300,9 @@ def prepare_dialogs(lang, cube,  dialog_id, prep_path, dialog_path, start_date, 
                     function_type=""):
     """
     Reads raw csv data and creates prepared copy
-    at /data/prepared_dialogs/
+    at prep_path
     :return: None
     """
-    
     #TODO: create a new column for preprocessed text. NEVER use the same column for raw and preprocessed data, with such approach you lose information!
     logging.debug(f'Preparing dialog #{dialog_id}.')
     data = pd.read_csv(f'{dialog_path}{dialog_id}.csv')
