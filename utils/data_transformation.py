@@ -389,7 +389,7 @@ if __name__ == "__main__":
 
         # change to date range in what you want to analyse messages of user_id_get_msg - from START_DATE to END_DATE;
         # format "%Y-%m-%d %H:%M:%S"
-        START_DATE = datetime.datetime(2020, 8, 9, 0, 0, 0)
+        START_DATE = datetime.datetime(2017, 5, 9, 0, 0, 0)
         END_DATE = datetime.datetime(2020, 8, 10, 0, 0, 0)
         prepare_dialogs_sorted_by_lang(DIALOG_ID, DIALOG_PATH, START_DATE, END_DATE)
 
