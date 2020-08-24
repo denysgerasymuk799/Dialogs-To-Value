@@ -15,26 +15,8 @@ from nltk.tokenize import word_tokenize
 from num2words import num2words
 from stop_words import get_stop_words
 from uk_stemmer import UkStemmer
+
 from word2number import w2n
-
-
-def init_tool_config_arg():
-    parser = argparse.ArgumentParser(description="Step #3.Prepare dialogs data.")
-    parser.add_argument(
-        "--dialogs_ids",
-        nargs="+",
-        type=int,
-        help="id(s) of dialog(s) to download, -1 for all",
-        required=False,
-    )
-    parser.add_argument(
-        "--config_path",
-        type=str,
-        help="path to config file",
-        default="config/config.json",
-    )
-    parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
-    return parser.parse_args()
 
 
 def if_in_date_range(date_time, START_DATE, END_DATE):
@@ -146,7 +128,6 @@ def stemming(data, lang):
 
     return new_text
 
-
 def url_to_domain(word: str, check=False):
     """
     Extracts domain from url.
@@ -184,6 +165,7 @@ def delete_symbols(msg: str) -> str:
     :param msg: str
     :return: str
     """
+
     symbols = re.compile(r"[-!$%^&*()_+©|~#=.`{}\[\]:'\";<>?,ʼ/]|[^\w]")
 
     return re.sub(symbols, ' ', msg)
@@ -211,8 +193,8 @@ def lemmatization(msg, lang, cube):
                     lemmas += " "
 
     return lemmas
-
-
+  
+  
 def clean_message(msg: str) -> str:
     """
     Makes preparation for the given message.
@@ -224,7 +206,6 @@ def clean_message(msg: str) -> str:
         if url_to_domain(word, check=True):
             out_msg.append(url_to_domain(word))
         else:
-            # word = word_to_num(word)
             out_msg.append(delete_symbols(word))
     return re.sub(r'\s\s+', ' ', ' '.join(out_msg))
 
@@ -370,29 +351,3 @@ def prepare_dialogs_sorted_by_lang(dialog_ids, dialog_path, prepared_path, start
             print(f"\n=======Language {lang} -- {n_dialog} from {n_all_dialogs}=======")
             prepare_dialogs(lang, cube, dialog_id, prepared_path, dialog_path, start_date,
                             end_date, "words_frequency")
-
-
-if __name__ == "__main__":
-    args = init_tool_config_arg()
-
-    DIALOG_ID = args.dialogs_ids
-    DEBUG_MODE = args.debug_mode
-    DIALOG_PATH = '../data/test_dialogs/'
-    PREPARED_PATH = '../data/prepared_dialogs/'
-    LOGS_PATH = '../logs/project_logs.log'
-
-    if DEBUG_MODE:
-        logging.basicConfig(filename=LOGS_PATH, level=logging.DEBUG)
-
-    if os.path.isdir(DIALOG_PATH):
-        if not os.path.isdir(PREPARED_PATH):
-            os.mkdir(PREPARED_PATH)
-
-        # change to date range in what you want to analyse messages of user_id_get_msg - from START_DATE to END_DATE;
-        # format "%Y-%m-%d %H:%M:%S"
-        START_DATE = datetime.datetime(2017, 5, 9, 0, 0, 0)
-        END_DATE = datetime.datetime(2020, 8, 10, 0, 0, 0)
-        prepare_dialogs_sorted_by_lang(DIALOG_ID, DIALOG_PATH, PREPARED_PATH,  START_DATE, END_DATE)
-
-    else:
-        logging.error('Dialogs dir does not exist !')

@@ -1,8 +1,7 @@
-data/*
-data/processed_dialog_files/*
+*.csv
 
+data/*
 logs/*
-logs/project_logs.log
 
 tmp.session
 tmp.session-journal
