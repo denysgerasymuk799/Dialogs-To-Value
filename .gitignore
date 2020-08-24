@@ -1,12 +1,15 @@
-data/dialogs/*
+*.csv
+
+data/*
+logs/*
 
 tmp.session
+tmp.session-journal
+
 config/config.json
 
-data/
 .idea/
 
-*.csv
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
