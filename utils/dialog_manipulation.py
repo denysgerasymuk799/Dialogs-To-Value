@@ -4,6 +4,18 @@ import math
 import os
 import pandas as pd
 
+import math
+
+
+def get_date_from_string(date_info: str):
+    """
+    Converts string with symbols to datetime obj.
+    :param date_info: str
+    :return: dat.datetime()
+    """
+    date = date_info[:10].split('-') + date_info[11:19].split(':')
+    return dat.datetime(*[int(x) for x in date])
+
 
 def get_digits_next_hundred(num):
     """
@@ -69,28 +81,3 @@ def add_subdialogs_ids(data):
         if reply_time > min_delay and reply_time:
             subdialog_count += 1
         data['subdialog_id'][i] = subdialog_count
-
-
-if __name__ == '__main__':
-    # change to yours
-    path_to_prepared_dialogs = os.path.join("..", "data", "prepared_dialogs")
-    path_to_processed_files = "../data/processed_dialog_files/"
-
-    DIALOGS_IDS = -1
-    if DIALOGS_IDS == -1:
-        DIALOGS_IDS = os.listdir(path_to_prepared_dialogs)
-
-    for dialog_id in DIALOGS_IDS:
-        dialog_id = str(dialog_id)[:-4]
-        data = pd.read_csv(os.path.join("..", "data", "prepared_dialogs", f"{dialog_id}.csv"))
-        add_reply_time(data)
-        add_subdialogs_ids(data)
-        # print(data)
-
-        if not os.path.exists(path_to_processed_files):
-            os.mkdir(path_to_processed_files)
-
-        if not os.path.exists(path_to_processed_files + dialog_id):
-            os.mkdir(path_to_processed_files + dialog_id)
-
-        data.to_csv(os.path.join(path_to_processed_files + dialog_id, f"subdialogs_{dialog_id}.csv"))
