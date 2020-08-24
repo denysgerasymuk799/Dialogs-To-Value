@@ -313,24 +313,24 @@ def prepare_dialogs(lang, cube,  dialog_id, prep_path, dialog_path, start_date, 
         date_time = data["date"][i][:-6]
         dialog_datetime = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
 
-        # if dialog_datetime <= START_DATE:
-        #     break
+        if dialog_datetime <= start_date:
+            break
 
-        msg = data.loc[i, 'message']
+        # msg = data.loc[i, 'message']
 
         if start_date < dialog_datetime < end_date:
-            if not pd.isnull(msg):
-                msg = transform_raw_data(msg, lang, function_type, cube)
+            if not pd.isnull(data.loc[i, 'message']):
+                data.at[i, 'message'] = transform_raw_data(data.loc[i, 'message'], lang, function_type, cube)
                 print("INDEX", i)
 
-        preprocessed_text_lst.append(msg)
+        # preprocessed_text_lst.append(msg)
 
-    data["preprocessed_message"] = preprocessed_text_lst
+    # data["preprocessed_message"] = preprocessed_text_lst
     data.to_csv(f'{prep_path}{dialog_id}.csv')
     logging.warning("saved dialog!")
 
 
-def prepare_dialogs_sorted_by_lang(dialog_ids, dialog_path, start_date, end_date):
+def prepare_dialogs_sorted_by_lang(dialog_ids, dialog_path, prepared_path, start_date, end_date):
     dialog_ids_sorted_by_lang = {
         "ua": [],
         "ru": [],
@@ -368,7 +368,7 @@ def prepare_dialogs_sorted_by_lang(dialog_ids, dialog_path, start_date, end_date
         for dialog_id in dialog_ids_sorted_by_lang[lang]:
             n_dialog += 1
             print(f"\n=======Language {lang} -- {n_dialog} from {n_all_dialogs}=======")
-            prepare_dialogs(lang, cube, dialog_id, PREPARED_PATH, dialog_path, start_date,
+            prepare_dialogs(lang, cube, dialog_id, prepared_path, dialog_path, start_date,
                             end_date, "words_frequency")
 
 
@@ -377,7 +377,7 @@ if __name__ == "__main__":
 
     DIALOG_ID = args.dialogs_ids
     DEBUG_MODE = args.debug_mode
-    DIALOG_PATH = '../data/dialogs/'
+    DIALOG_PATH = '../data/test_dialogs/'
     PREPARED_PATH = '../data/prepared_dialogs/'
     LOGS_PATH = '../logs/project_logs.log'
 
@@ -392,7 +392,7 @@ if __name__ == "__main__":
         # format "%Y-%m-%d %H:%M:%S"
         START_DATE = datetime.datetime(2017, 5, 9, 0, 0, 0)
         END_DATE = datetime.datetime(2020, 8, 10, 0, 0, 0)
-        prepare_dialogs_sorted_by_lang(DIALOG_ID, DIALOG_PATH, START_DATE, END_DATE)
+        prepare_dialogs_sorted_by_lang(DIALOG_ID, DIALOG_PATH, PREPARED_PATH,  START_DATE, END_DATE)
 
     else:
         logging.error('Dialogs dir does not exist !')

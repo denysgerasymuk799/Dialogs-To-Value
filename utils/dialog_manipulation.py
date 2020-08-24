@@ -1,18 +1,8 @@
+import argparse
 import datetime as dat
 import math
 import os
-
 import pandas as pd
-
-
-def get_date_from_string(date_info: str):
-    """
-    Converts string with symbols to datetime obj.
-    :param date_info: str
-    :return: dat.datetime()
-    """
-    date = date_info[:10].split('-') + date_info[11:19].split(':')
-    return dat.datetime(*[int(x) for x in date])
 
 
 def get_digits_next_hundred(num):
@@ -30,25 +20,18 @@ def add_reply_time(data):
     :param data: DataFrame
     :return: DataFrame
     """
-    data['reply_time'] = 0
-
-    i = k = data['id'].count() - 1
-    msg_counter = 0
-    while i > 0 and k > 0:
-        sender = data['from_id'][i]
-        j = i
-        while sender == data['from_id'][j]:
-            j -= 1
-        if j <= 1:
-            break
-        recipient = data['from_id'][j]
-        time_diff = (get_date_from_string(data['date'][j]) - get_date_from_string(data['date'][i])).total_seconds()
-        data['reply_time'][i] += time_diff
-        k = j
-        msg_counter += 1
-        while recipient == data.loc[k, 'from_id'] and k:
-            k -= 1
-        i = k + 1
+    data['reply_time'] = ''
+    data['raw_date'] = data.apply(lambda row: row['date'][:19].replace('-', ' ').replace(':', ' '), axis=1)
+    for index, cur_row in data[::-1].iterrows():
+        next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
+        if next_row['from_id'] != cur_row['from_id']:
+            time_format = '%Y %m %d %H %M %S'
+            time_diff = (dat.datetime.strptime(cur_row['raw_date'], time_format)
+                         - dat.datetime.strptime(next_row['raw_date'], time_format))
+            data['reply_time'][index] = time_diff.total_seconds()
+        else:
+            data['reply_time'][index] = 0
+    del data['raw_date']
 
 
 def get_reply_frequency(data):
@@ -89,7 +72,25 @@ def add_subdialogs_ids(data):
 
 
 if __name__ == '__main__':
-    data = pd.read_csv(os.path.join("../..", "data", "prepared_dialogs", "347963763.csv"))
-    add_reply_time(data)
-    add_subdialogs_ids(data)
-    print(data)
+    # change to yours
+    path_to_prepared_dialogs = os.path.join("..", "data", "prepared_dialogs")
+    path_to_processed_files = "../data/processed_dialog_files/"
+
+    DIALOGS_IDS = -1
+    if DIALOGS_IDS == -1:
+        DIALOGS_IDS = os.listdir(path_to_prepared_dialogs)
+
+    for dialog_id in DIALOGS_IDS:
+        dialog_id = str(dialog_id)[:-4]
+        data = pd.read_csv(os.path.join("..", "data", "prepared_dialogs", f"{dialog_id}.csv"))
+        add_reply_time(data)
+        add_subdialogs_ids(data)
+        # print(data)
+
+        if not os.path.exists(path_to_processed_files):
+            os.mkdir(path_to_processed_files)
+
+        if not os.path.exists(path_to_processed_files + dialog_id):
+            os.mkdir(path_to_processed_files + dialog_id)
+
+        data.to_csv(os.path.join(path_to_processed_files + dialog_id, f"subdialogs_{dialog_id}.csv"))
