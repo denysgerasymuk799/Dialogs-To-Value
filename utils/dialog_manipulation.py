@@ -256,7 +256,6 @@ def prepare_dialogs_sorted_by_lang(
             data = pd.read_csv(f"{dialog_path}/{filename}")
             lang = detect_data_language(data)
             dialog_ids_sorted_by_lang[lang].append(filename[:-4])
-
     else:
         for dialog in dialog_ids:
             data = pd.read_csv(f"{dialog_path}/{dialog}.csv")
