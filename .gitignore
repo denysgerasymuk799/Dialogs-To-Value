@@ -1,4 +1,6 @@
 *.csv
+!tone-dict-ua.csv
+!tone-dict-ru.csv
 
 data/*
 logs/*
