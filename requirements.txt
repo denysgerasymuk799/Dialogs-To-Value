@@ -11,7 +11,9 @@ scikit-learn~=0.23.2
 nlpcube~=0.1.0.8
 stop-words~=2018.7.23
 -e git+https://github.com/Desklop/Uk_Stemmer
+gensim~=3.8.3
 
 Telethon==1.11.3
 ipywidgets~=7.5.1
 altair~=4.1.0
+pyLDAvis~=2.1.2

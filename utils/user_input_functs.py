@@ -8,7 +8,7 @@ def init_tool_config_arg():
         nargs="+",
         type=int,
         help="id(s) of dialog(s) to download, -1 for all",
-        required=False,
+        required=True,
     )
     parser.add_argument(
         "--config_path",
