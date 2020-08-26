@@ -1,34 +1,24 @@
-import datetime as dat
-import os
-import pandas as pd
+import datetime
 import math
 
-# import logging
-# import os
-# from pprint import pprint
-#
-# import numpy as np
-# import pandas as pd
-# import pymorphy2
-# import tokenize_uk
-# from cube.api import Cube
-# from nltk.stem.snowball import SnowballStemmer
-# from nltk.tokenize import word_tokenize
-# from num2words import num2words
-# from stop_words import get_stop_words
-# from uk_stemmer import UkStemmer
-#
-# from word2number import w2n
+import logging
+import os
+
+import pandas as pd
+from cube.api import Cube
+from pprint import pprint
+
+from utils.text_data_transformation import transform_raw_data
 
 
 def get_date_from_string(date_info: str):
     """
     Converts string with symbols to datetime obj.
     :param date_info: str
-    :return: dat.datetime()
+    :return: datetime.datetime()
     """
     date = date_info[:10].split("-") + date_info[11:19].split(":")
-    return dat.datetime(*[int(x) for x in date])
+    return datetime.datetime(*[int(x) for x in date])
 
 
 def get_digits_next_hundred(num):
@@ -54,9 +44,9 @@ def add_reply_time(data):
         next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
         if next_row["from_id"] != cur_row["from_id"]:
             time_format = "%Y %m %d %H %M %S"
-            time_diff = dat.datetime.strptime(
+            time_diff = datetime.datetime.strptime(
                 cur_row["raw_date"], time_format
-            ) - dat.datetime.strptime(next_row["raw_date"], time_format)
+            ) - datetime.datetime.strptime(next_row["raw_date"], time_format)
             data["reply_time"][index] = time_diff.total_seconds()
         else:
             data["reply_time"][index] = 0
@@ -102,6 +92,31 @@ def add_subdialogs_ids(data):
         data["subdialog_id"][i] = subdialog_count
 
 
+def add_subdialogs_langs(data):
+    n_subdialog, n_subdialog_msgs = 1, 0
+    start_subdialog_n_row = 0
+    subdialog_lang_lst = []
+    previous_subdialog_id = 1
+
+    for index, row in data.iterrows():
+        if previous_subdialog_id != row.subdialog_id:
+            # detect data language for data[start_subdialog_n_row: end_subdialog_n_row]
+            lang = detect_data_language(data[start_subdialog_n_row: index])
+            previous_subdialog_id = row.subdialog_id
+            start_subdialog_n_row = index
+            subdialog_lang_lst += [lang] * n_subdialog_msgs
+            n_subdialog_msgs = 0
+
+        n_subdialog_msgs += 1
+        n_subdialog += 1
+
+    # detect data language for data[start_subdialog_n_row: end_subdialog_n_row]
+    lang = detect_data_language(data[start_subdialog_n_row: data.index[-1]])
+    subdialog_lang_lst += [lang] * n_subdialog_msgs
+
+    data["subdialog_language"] = subdialog_lang_lst
+
+
 def prepare_dialogs(
     lang,
     cube,
@@ -111,6 +126,7 @@ def prepare_dialogs(
     start_date,
     end_date,
     function_type="",
+    additional_options=""
 ):
     """
     Reads raw csv data and creates prepared copy
@@ -120,86 +136,31 @@ def prepare_dialogs(
 
     # TODO: create a new column for preprocessed text. NEVER use the same column for raw and preprocessed data, with such approach you lose information!
     logging.debug(f"Preparing dialog #{dialog_id}.")
-    data = pd.read_csv(f"{dialog_path}{dialog_id}.csv")
+    data = pd.read_csv(f"{dialog_path}/{dialog_id}.csv")
 
-    preprocessed_text_lst = []
-    for i in data.index:
-        date_time = data["date"][i][:-6]
+    data["preprocessed_message"] = data["message"]
+    for index, row in data.iterrows():
+        date_time = row["date"][:-6]
         dialog_datetime = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
 
         if dialog_datetime <= start_date:
             break
 
-        # msg = data.loc[i, 'message']
+        # if start_date < dialog_datetime < end_date:
+        if not pd.isnull(row["message"]):
+            data.at[index, "preprocessed_message"] = transform_raw_data(
+                data.loc[index, "preprocessed_message"], lang, function_type, cube
+            )
+            print(f"INDEX {index} from {data.index[-1]}")
 
-        if start_date < dialog_datetime < end_date:
-            if not pd.isnull(data.loc[i, "message"]):
-                data.at[i, "message"] = transform_raw_data(
-                    data.loc[i, "message"], lang, function_type, cube
-                )
-                print("INDEX", i)
+    if additional_options == "add_lang_column":
+        data["dialog_language"] = lang
 
-        # preprocessed_text_lst.append(msg)
-
-    # data["preprocessed_message"] = preprocessed_text_lst
-    data.to_csv(f"{prep_path}{dialog_id}.csv")
+    data.to_csv(f"{prep_path}/{dialog_id}.csv")
     logging.warning("saved dialog!")
 
 
-def prepare_dialogs_sorted_by_lang(
-    dialog_ids, dialog_path, prepared_path, start_date, end_date
-):
-    dialog_ids_sorted_by_lang = {"ua": [], "ru": [], "en": []}
-    if dialog_ids[0] == -1:
-        for filename in os.listdir(dialog_path):
-            data = pd.read_csv(f"{dialog_path}{filename}")
-            lang = detect_data_language(data)
-            dialog_ids_sorted_by_lang[lang].append(filename[:-4])
-
-    else:
-        for dialog in dialog_ids:
-            data = pd.read_csv(f"{dialog_path}{dialog}.csv")
-            lang = detect_data_language(data)
-            dialog_ids_sorted_by_lang[lang].append(dialog)
-
-    print("dialog_ids_sorted_by_lang")
-    pprint(dialog_ids_sorted_by_lang)
-    n_all_dialogs = sum(
-        [
-            len(dialog_ids_sorted_by_lang[lang])
-            for lang in dialog_ids_sorted_by_lang.keys()
-        ]
-    )
-    n_dialog = 0
-    for lang in dialog_ids_sorted_by_lang.keys():
-        if not dialog_ids_sorted_by_lang[lang]:
-            continue
-
-        cube = ""
-        if lang == "ua":
-            cube = Cube(verbose=True)
-            cube.load("uk")
-
-        elif lang == "en":
-            cube = Cube(verbose=True)
-            cube.load("en")
-
-        for dialog_id in dialog_ids_sorted_by_lang[lang]:
-            n_dialog += 1
-            print(f"\n=======Language {lang} -- {n_dialog} from {n_all_dialogs}=======")
-            prepare_dialogs(
-                lang,
-                cube,
-                dialog_id,
-                prepared_path,
-                dialog_path,
-                start_date,
-                end_date,
-                "words_frequency",
-            )
-
-
-def detect_data_language(data):
+def detect_data_language(data, data_type=""):
     key_letters = {
         "ua": {
             "є": 0,
@@ -242,14 +203,18 @@ def detect_data_language(data):
         },
     }
     dialog_step_msgs = []
-    if data.index[-1] < 149:
+    n_msgs_to_analyse = 150
+    if data_type == "subdialogs":
+        n_msgs_to_analyse = 30
+
+    if data.index[-1] < n_msgs_to_analyse - 1:
         msgs_step = 1
 
     else:
         # in such way with msgs_step I can get 150 messages
         # which are at the different parts of the dialog, so
         # when I analyse there 150 msgs I can get a real language
-        msgs_step = data.index[-1] // 150
+        msgs_step = data.index[-1] // n_msgs_to_analyse
 
     for i in range(0, data.index[-1], msgs_step):
         dialog_step_msgs.append(data["message"][i])
@@ -279,3 +244,56 @@ def detect_data_language(data):
             mx_total = key_letters[lang]["total"]
 
     return mx_total_lang
+
+
+def prepare_dialogs_sorted_by_lang(
+    dialog_ids, dialog_path, prepared_path, start_date, end_date,
+        additional_options=""
+):
+    dialog_ids_sorted_by_lang = {"ua": [], "ru": [], "en": []}
+    if dialog_ids[0] == -1:
+        for filename in os.listdir(dialog_path):
+            data = pd.read_csv(f"{dialog_path}/{filename}")
+            lang = detect_data_language(data)
+            dialog_ids_sorted_by_lang[lang].append(filename[:-4])
+    else:
+        for dialog in dialog_ids:
+            data = pd.read_csv(f"{dialog_path}/{dialog}.csv")
+            lang = detect_data_language(data)
+            dialog_ids_sorted_by_lang[lang].append(dialog)
+
+    print("dialog_ids_sorted_by_lang")
+    pprint(dialog_ids_sorted_by_lang)
+    n_all_dialogs = sum(
+        [
+            len(dialog_ids_sorted_by_lang[lang])
+            for lang in dialog_ids_sorted_by_lang.keys()
+        ]
+    )
+    n_dialog = 0
+    for lang in dialog_ids_sorted_by_lang.keys():
+        if not dialog_ids_sorted_by_lang[lang]:
+            continue
+
+        cube = ""
+        if lang == "ua":
+            cube = Cube(verbose=True)
+            cube.load("uk")
+
+        elif lang == "en":
+            cube = Cube(verbose=True)
+            cube.load("en")
+
+        for dialog_id in dialog_ids_sorted_by_lang[lang]:
+            n_dialog += 1
+            print(f"\n=======Language {lang} -- {n_dialog} from {n_all_dialogs}=======")
+            prepare_dialogs(
+                lang,
+                cube,
+                dialog_id,
+                prepared_path,
+                dialog_path,
+                start_date,
+                end_date,
+                "words_frequency", additional_options
+            )

@@ -1,20 +1,19 @@
 import re
 from word2number import w2n
 
-# import logging
-# import os
-# from pprint import pprint
-#
-# import numpy as np
-# import pandas as pd
-# import pymorphy2
-# import tokenize_uk
-# from cube.api import Cube
-# from nltk.stem.snowball import SnowballStemmer
-# from nltk.tokenize import word_tokenize
-# from num2words import num2words
-# from stop_words import get_stop_words
-# from uk_stemmer import UkStemmer
+import logging
+import os
+from pprint import pprint
+
+import numpy as np
+import pandas as pd
+import pymorphy2
+import tokenize_uk
+from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import word_tokenize
+from num2words import num2words
+from stop_words import get_stop_words
+from uk_stemmer import UkStemmer
 
 
 def delete_special_characters(msg: str) -> str:
@@ -236,3 +235,4 @@ def transform_raw_data(msg, lang, function_type, cube):
     # msg = stemming(msg, lang)
     msg = lemmatization(msg, lang, cube)
     return msg
+
