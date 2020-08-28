@@ -36,21 +36,18 @@ def add_reply_time(data):
     :param data: DataFrame
     :return: DataFrame
     """
-    data["reply_time"] = ""
-    data["raw_date"] = data.apply(
-        lambda row: row["date"][:19].replace("-", " ").replace(":", " "), axis=1
-    )
+    data["reply_btw_sender_time"] = 0
+    data["reply_btw_own_time"] = 0
     for index, cur_row in data[::-1].iterrows():
         next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
+        time_format = "%Y-%m-%d %H:%M:%S"
+        time_diff = datetime.datetime.strptime(
+            cur_row["date"][:19], time_format
+        ) - datetime.datetime.strptime(next_row["date"][:19], time_format)
         if next_row["from_id"] != cur_row["from_id"]:
-            time_format = "%Y %m %d %H %M %S"
-            time_diff = datetime.datetime.strptime(
-                cur_row["raw_date"], time_format
-            ) - datetime.datetime.strptime(next_row["raw_date"], time_format)
-            data["reply_time"][index] = time_diff.total_seconds()
+            data.loc[index, "reply_btw_sender_time"] = time_diff.total_seconds()
         else:
-            data["reply_time"][index] = 0
-    del data["raw_date"]
+            data.loc[index, "reply_btw_own_time"] = time_diff.total_seconds()
 
 
 def get_reply_frequency(data):
@@ -118,15 +115,15 @@ def add_subdialogs_langs(data):
 
 
 def prepare_dialogs(
-    lang,
-    cube,
-    dialog_id,
-    prep_path,
-    dialog_path,
-    start_date,
-    end_date,
-    function_type="",
-    additional_options=""
+        lang,
+        cube,
+        dialog_id,
+        prep_path,
+        dialog_path,
+        start_date,
+        end_date,
+        function_type="",
+        additional_options=""
 ):
     """
     Reads raw csv data and creates prepared copy
@@ -247,7 +244,7 @@ def detect_data_language(data, data_type=""):
 
 
 def prepare_dialogs_sorted_by_lang(
-    dialog_ids, dialog_path, prepared_path, start_date, end_date,
+        dialog_ids, dialog_path, prepared_path, start_date, end_date,
         additional_options=""
 ):
     dialog_ids_sorted_by_lang = {"ua": [], "ru": [], "en": []}
