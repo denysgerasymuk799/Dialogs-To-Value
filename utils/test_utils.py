@@ -104,42 +104,42 @@ class DialogManipulationTesting(unittest.TestCase):
         self.assertEqual(list(df['reply_btw_sender_time']), [],
                          'Testing diff 5 sec btw diff sender msgs (0 users)')
 
-    def add_subdialogs_ids(self):
+    def test_add_subdialogs_ids(self):
         """
         Testing addition of subdialog ids.
         """
-        dates = {1: ['2020-02-20 00:00:09+00:00',
-                     '2020-02-20 00:00:08+00:00',
-                     '2020-02-20 00:00:07+00:00',
+        dates = {1: ['2020-02-20 00:00:45+00:00',
+                     '2020-02-20 00:00:36+00:00',
+                     '2020-02-20 00:00:28+00:00',
+                     '2020-02-20 00:00:21+00:00',
+                     '2020-02-20 00:00:15+00:00',
+                     '2020-02-20 00:00:10+00:00',
                      '2020-02-20 00:00:06+00:00',
-                     '2020-02-20 00:00:05+00:00',
-                     '2020-02-20 00:00:04+00:00',
                      '2020-02-20 00:00:03+00:00',
-                     '2020-02-20 00:00:02+00:00',
                      '2020-02-20 00:00:01+00:00',
                      '2020-02-20 00:00:00+00:00', ],
-                 #
-                 # 2: ['2020-02-20 00:00:45+00:00',
-                 #     '2020-02-20 00:00:35+00:00',
-                 #     '2020-02-20 00:00:30+00:00',
-                 #     '2020-02-20 00:00:25+00:00',
-                 #     '2020-02-20 00:00:15+00:00',
-                 #     '2020-02-20 00:00:10+00:00',
-                 #     '2020-02-20 00:00:00+00:00', ],
-                 #
-                 # 3: ['2020-02-20 00:00:45+00:00',
-                 #     '2020-02-20 00:00:35+00:00',
-                 #     '2020-02-20 00:00:30+00:00',
-                 #     '2020-02-20 00:00:25+00:00',
-                 #     '2020-02-20 00:00:15+00:00',
-                 #     '2020-02-20 00:00:10+00:00',
-                 #     '2020-02-20 00:00:00+00:00', ],
-                 #
-                 # 4: []
+
+                 2: ['2020-02-20 00:01:00+00:00',
+                     '2020-02-20 00:00:50+00:00',
+                     '2020-02-20 00:00:40+00:00',
+                     '2020-02-20 00:00:30+00:00',
+                     '2020-02-20 00:00:20+00:00',
+                     '2020-02-20 00:00:10+00:00',
+                     '2020-02-20 00:00:00+00:00', ],
                  }
 
         from_ids = {1: ['1', '2', '1', '2', '1', '2', '1', '2', '1', '2']}
         df = pd.DataFrame(list(zip(from_ids[1], dates[1])), columns=['from_id', 'date'])
         add_reply_time(df)
         add_subdialogs_ids(df)
-        print(df)
+        # print(df[['date', 'from_id', 'reply_btw_own_time', 'reply_btw_sender_time', 'subdialog_id']])
+        self.assertEqual(list(df['subdialog_id']), [1, 2, 3, 4, 5, 5, 5, 5, 5, 5],
+                         'Testing subdialog id separation + add_reply_time')
+
+        from_ids = {1: ['1', '2', '1', '2', '1', '2', '1']}
+        df = pd.DataFrame(list(zip(from_ids[1], dates[2])), columns=['from_id', 'date'])
+        add_reply_time(df)
+        add_subdialogs_ids(df)
+        # print(df[['date', 'from_id', 'reply_btw_own_time', 'reply_btw_sender_time', 'subdialog_id']])
+        self.assertEqual(list(df['subdialog_id']), [1, 1, 1, 1, 1, 1, 1],
+                         'Testing subdialog id separation + add_reply_time')
