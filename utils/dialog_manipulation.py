@@ -1,95 +1,57 @@
 import datetime
-import math
-
 import logging
 import os
-
 import pandas as pd
 from cube.api import Cube
-from pprint import pprint
 
 from utils.text_data_transformation import transform_raw_data
 
 
-def get_date_from_string(date_info: str):
+def add_reply_time(data: pd.DataFrame) -> None:
     """
-    Converts string with symbols to datetime obj.
-    :param date_info: str
-    :return: datetime.datetime()
+    Adds reply time between two users
+    column @ given DataFrame (data)
     """
-    date = date_info[:10].split("-") + date_info[11:19].split(":")
-    return datetime.datetime(*[int(x) for x in date])
-
-
-def get_digits_next_hundred(num):
-    """
-    Rounds given value to be divisible by 10
-    :param num:
-    :return:
-    """
-    return int(math.ceil(num / 100.0)) * 100
-
-
-def add_reply_time(data):
-    """
-    Adds reply time between two users column @ given DataFrame (data)
-    :param data: DataFrame
-    :return: DataFrame
-    """
-    data["reply_time"] = ""
-    data["raw_date"] = data.apply(
-        lambda row: row["date"][:19].replace("-", " ").replace(":", " "), axis=1
-    )
+    data["reply_btw_sender_time"] = 0
+    data["reply_btw_own_time"] = 0
     for index, cur_row in data[::-1].iterrows():
         next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
+        time_format = "%Y-%m-%d %H:%M:%S"
+        time_diff = datetime.datetime.strptime(
+            cur_row["date"][:19], time_format
+        ) - datetime.datetime.strptime(next_row["date"][:19], time_format)
         if next_row["from_id"] != cur_row["from_id"]:
-            time_format = "%Y %m %d %H %M %S"
-            time_diff = datetime.datetime.strptime(
-                cur_row["raw_date"], time_format
-            ) - datetime.datetime.strptime(next_row["raw_date"], time_format)
-            data["reply_time"][index] = time_diff.total_seconds()
+            data.loc[index, "reply_btw_sender_time"] = time_diff.total_seconds()
         else:
-            data["reply_time"][index] = 0
-    del data["raw_date"]
+            data.loc[index, "reply_btw_own_time"] = time_diff.total_seconds()
 
 
-def get_reply_frequency(data):
+def get_avg_subdialog_reply_time(data: pd.DataFrame) -> float:
     """
-    Counts number of messages with ~same reply_time
-    :param data: DataFrame
-    :return: DataFrame
+    Finds average reply time after which it is considered
+    that two messages are @ separate subdialogs.
     """
-    reply_frequency = {}
-    for i in data.index:
-        reply_time = get_digits_next_hundred(int(data["reply_time"][i]))
-        if not reply_frequency.get(reply_time):
-            reply_frequency.setdefault(reply_time, 1)
-        else:
-            reply_frequency[reply_time] += 1
-    return reply_frequency
+    reply_values = sorted({row['reply_btw_sender_time'] for index, row in data.iterrows()})
+    if not reply_values:
+        logging.error("No reply time data !")
+    cut_off = int(len(reply_values) / 100 * 10)
+    reply_values = reply_values[cut_off:-cut_off] if cut_off else reply_values
+    return reply_values[int(len(reply_values) / 100 * 50)]
 
 
-def add_subdialogs_ids(data):
+def add_subdialogs_ids(data: pd.DataFrame) -> None:
     """
     Adds subdialog id column @ given DataFrame (data),
     based on calculated time between subdialogs:
-    (( length of list of reply times rounded to be divisible by 10 sorted
-    and reversed) / 100) * 40, which is the index of minimum subdialog time.
-    Note: in DataFrame reply_time column should be.
-    :param data: DataFrame
-    :return: DataFrame
+    Note: reply_time column should be in pd.DataFrame.
     """
-    subdialog_count = 1
-    data["subdialog_id"] = ""
-    reply_frequency = get_reply_frequency(data)
-    min_delay = sorted(list(reply_frequency.keys()))[
-        -(round((len(reply_frequency) / 100) * 40))
-    ]
-    for i in data.index:
-        reply_time = data["reply_time"][i]
+    subdialog_count = data["subdialog_id"] = 1
+    min_delay = get_avg_subdialog_reply_time(data)
+    for index, rows in data[:len(data) - 1].iterrows():
+        reply_time = data.loc[index, "reply_btw_sender_time"]
         if reply_time > min_delay and reply_time:
             subdialog_count += 1
-        data["subdialog_id"][i] = subdialog_count
+        data.loc[index + 1, "subdialog_id"] = subdialog_count
 
 
 def add_subdialogs_langs(data):
@@ -118,15 +80,15 @@ def add_subdialogs_langs(data):
 
 
 def prepare_dialogs(
-    lang,
-    cube,
-    dialog_id,
-    prep_path,
-    dialog_path,
-    start_date,
-    end_date,
-    function_type="",
-    additional_options=""
+        lang,
+        cube,
+        dialog_id,
+        prep_path,
+        dialog_path,
+        start_date,
+        end_date,
+        function_type="",
+        additional_options=""
 ):
     """
     Reads raw csv data and creates prepared copy
@@ -245,7 +207,7 @@ def detect_data_language(data, data_type=""):
 
 
 def prepare_dialogs_sorted_by_lang(
-    dialog_ids, dialog_path, prepared_path, start_date, end_date,
+        dialog_ids, dialog_path, prepared_path, start_date, end_date,
         additional_options=""
 ):
     dialog_ids_sorted_by_lang = {"ua": [], "ru": [], "en": []}
@@ -295,3 +257,5 @@ def prepare_dialogs_sorted_by_lang(
                 end_date,
                 "words_frequency", additional_options
             )
+
+
