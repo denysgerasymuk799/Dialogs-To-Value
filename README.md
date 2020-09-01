@@ -1,4 +1,9 @@
 # Telegram dialogs analysis
+### 0. env preparation
+0. pip install -r requirements.txt
+1. pip install git+https://github.com/Desklop/Uk_Stemmer@master#egg=uk_stemmer
+
+
 
 ## word_frequency_in_dialogs.ipynb
 
