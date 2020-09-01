@@ -133,8 +133,6 @@ def prepare_dialogs(
     at prep_path
     :return: None
     """
-
-    # TODO: create a new column for preprocessed text. NEVER use the same column for raw and preprocessed data, with such approach you lose information!
     logging.debug(f"Preparing dialog #{dialog_id}.")
     data = pd.read_csv(f"{dialog_path}/{dialog_id}.csv")
 
