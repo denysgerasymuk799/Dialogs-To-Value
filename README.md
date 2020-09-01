@@ -1,7 +1,8 @@
 # Telegram dialogs analysis
 ### 0. env preparation
-0. pip install -r requirements.txt
-1. pip install git+https://github.com/Desklop/Uk_Stemmer@master#egg=uk_stemmer
+0. install Python 3.7.4
+1. pip install -r requirements.txt
+2. pip install git+https://github.com/Desklop/Uk_Stemmer@master#egg=uk_stemmer
 
 
 
