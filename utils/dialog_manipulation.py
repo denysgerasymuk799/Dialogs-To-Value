@@ -223,7 +223,6 @@ def prepare_dialogs_sorted_by_lang(
             dialog_ids_sorted_by_lang[lang].append(dialog)
 
     print("dialog_ids_sorted_by_lang")
-    pprint(dialog_ids_sorted_by_lang)
     n_all_dialogs = sum(
         [
             len(dialog_ids_sorted_by_lang[lang])
