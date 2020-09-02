@@ -120,7 +120,12 @@ def prepare_dialogs(
     logging.warning("saved dialog!")
 
 
+#TODO: add proper handler for empty message
 def detect_data_language(data, data_type=""):
+    
+#     if len(data) == 0:
+#         return 'en'
+    
     key_letters = {
         "ua": {
             "є": 0,
@@ -162,14 +167,16 @@ def detect_data_language(data, data_type=""):
             "total": 0,
         },
     }
+    
     dialog_step_msgs = []
     n_msgs_to_analyse = 150
+    
     if data_type == "subdialogs":
         n_msgs_to_analyse = 30
 
+#     print(len(data))
     if data.index[-1] < n_msgs_to_analyse - 1:
         msgs_step = 1
-
     else:
         # in such way with msgs_step I can get 150 messages
         # which are at the different parts of the dialog, so
@@ -180,8 +187,9 @@ def detect_data_language(data, data_type=""):
         dialog_step_msgs.append(data["message"][i])
 
     for msg in dialog_step_msgs:
+#         print(msg)
         if not pd.isnull(msg):
-            for letter in msg:
+            for letter in str(msg):
                 if letter in key_letters["ua"]:
                     lang = "ua"
                     key_letters[lang][letter] += 1
@@ -197,6 +205,7 @@ def detect_data_language(data, data_type=""):
     # get total sum of all values in languages dicts
     # in key_letters to detect the most common language
     mx_total, mx_total_lang = 0, ""
+    
     for lang in key_letters.keys():
         key_letters[lang]["total"] = sum(key_letters[lang].values())
         if key_letters[lang]["total"] >= mx_total:
@@ -223,7 +232,7 @@ def prepare_dialogs_sorted_by_lang(
             dialog_ids_sorted_by_lang[lang].append(dialog)
 
     print("dialog_ids_sorted_by_lang")
-    pprint(dialog_ids_sorted_by_lang)
+    
     n_all_dialogs = sum(
         [
             len(dialog_ids_sorted_by_lang[lang])
