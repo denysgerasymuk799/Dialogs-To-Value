@@ -3,6 +3,7 @@
 !tone-dict-ru.csv
 
 data/*
+
 logs/*
 
 tmp.session
