@@ -59,6 +59,45 @@ def add_subdialogs_ids(data: pd.DataFrame) -> pd.DataFrame:
     return output_data
 
 
+def add_typing_speed(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns typing speed column with WPM (words per min)
+    and CPM (characters per minute) in each subdialog.
+    """
+
+    def get_msg_typing_time(row):
+        time = row['reply_btw_own_time'] if row['reply_btw_own_time'] else row['reply_btw_sender_time']
+        if not time:
+            return 0
+        else:
+            return time / 60
+
+    output = {'wpm': [], 'cpm': []}
+    for subdialog in list(df.groupby(['subdialog_id']).groups.keys()):
+        gdf = df.groupby(df.subdialog_id).get_group(subdialog)[:-1:]
+        output['wpm'] += list(
+            gdf.apply(lambda row: round(len(row['message'].split()) / get_msg_typing_time(row)), axis=1)) + [0]
+        output['cpm'] += list(
+            gdf.apply(lambda row: round(len(row['message']) / get_msg_typing_time(row)), axis=1)) + [0]
+    return pd.DataFrame(output)
+
+
+def add_sleep_bounds(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns avg sleep bounds for each user per weekdays.
+    """
+    # TODO: need to create new dataframe struct.
+    pass
+
+
+def add_user_gender(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns possible gender based on verbs user uses,
+    works in ua/ru languages.
+    """
+    pass
+
+
 def add_subdialogs_langs(data):
     n_subdialog, n_subdialog_msgs = 1, 0
     start_subdialog_n_row = 0
