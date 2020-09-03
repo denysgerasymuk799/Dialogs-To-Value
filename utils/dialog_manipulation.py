@@ -115,12 +115,12 @@ def prepare_dialogs(
         if dialog_datetime <= start_date:
             break
 
-        # if start_date < dialog_datetime < end_date:
-        if not pd.isnull(row["message"]):
-            data.at[index, "preprocessed_message"] = transform_raw_data(
-                data.loc[index, "preprocessed_message"], lang, function_type, cube
-            )
-            print(f"INDEX {index} from {data.index[-1]}")
+        if start_date < dialog_datetime < end_date:
+            if not pd.isnull(row["message"]):
+                data.at[index, "preprocessed_message"] = transform_raw_data(
+                    data.loc[index, "preprocessed_message"], lang, function_type, cube
+                )
+                print(f"INDEX {index} from {data.index[-1]}")
 
     if additional_options == "add_lang_column":
         data["dialog_language"] = lang
@@ -225,6 +225,7 @@ def prepare_dialogs_sorted_by_lang(
             data = pd.read_csv(f"{dialog_path}/{filename}")
             lang = detect_data_language(data)
             dialog_ids_sorted_by_lang[lang].append(filename[:-4])
+
     else:
         for dialog in dialog_ids:
             data = pd.read_csv(f"{dialog_path}/{dialog}.csv")
