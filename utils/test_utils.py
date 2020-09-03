@@ -1,10 +1,11 @@
 import unittest
 import pandas as pd
 
-from utils.dialog_manipulation import add_reply_time, add_subdialogs_ids, get_avg_subdialog_reply_time
+from utils.dialog_manipulation import add_reply_time, add_subdialogs_ids, get_avg_subdialog_reply_time, add_typing_speed
 
 
 class DialogManipulationTesting(unittest.TestCase):
+    pd.set_option('display.max_columns', None)
 
     def test_get_avg_reply_time(self):
         """
@@ -122,3 +123,29 @@ class DialogManipulationTesting(unittest.TestCase):
         df = pd.merge(df, add_reply_time(df), right_index=True, left_index=True)
         self.assertEqual(list(add_subdialogs_ids(df)['subdialog_id']), [1, 1, 1, 1, 1, 1, 1],
                          'Testing subdialog id separation + add_reply_time')
+
+    def test_add_typing_speed(self):
+        user_ids = {1: [1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 2]}
+        subdialog_ids = {1: [1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3]}
+        messages = {1: ['t t t t',
+                        't t',
+                        't t t',
+                        '',
+                        't',
+                        't t t t',
+                        't t',
+                        't t t    ',
+                        't',
+                        't',
+                        't t t t t']}
+        reply_btw_own_time = {1: [0, 60, 60, 60, 0, 60, 60, 60, 60, 60, 00]}
+        reply_btw_sender_time = {1: [60, 0, 0, 0, 60, 0, 0, 0, 0, 0, 60]}
+
+        df = pd.DataFrame(
+            list(zip(subdialog_ids[1], user_ids[1], reply_btw_own_time[1], reply_btw_sender_time[1], messages[1])),
+            columns=['subdialog_id', 'user_ids', 'reply_btw_own_time', 'reply_btw_sender_time', 'message'])
+        df = pd.merge(df, add_typing_speed(df), right_index=True, left_index=True)
+        self.assertEqual(list(add_typing_speed(df)['wpm']), [4, 2, 3, 0, 1, 4, 2, 3, 0, 1, 0],
+                         'Testing adding typing speed - words per minute')
+        self.assertEqual(list(add_typing_speed(df)['cpm']), [7, 3, 5, 0, 1, 7, 3, 9, 0, 1, 0],
+                         'Testing adding typing speed - chars per minute')
