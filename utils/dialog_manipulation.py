@@ -1,21 +1,22 @@
 import datetime
 import logging
 import os
+from pprint import pprint
+
 import pandas as pd
 from cube.api import Cube
 
 from utils.text_data_transformation import transform_raw_data
 
 
-def add_reply_time(data: pd.DataFrame) -> pd.DataFrame:
+def add_reply_time(data: pd.DataFrame):
     """
     Returns reply time columns between two users
     column @ given DataFrame (data)
     """
 
-    output_data = pd.DataFrame(index=list(data.index))
-    output_data["reply_btw_sender_time"] = 0
-    output_data["reply_btw_own_time"] = 0
+    reply_btw_sender_time, reply_btw_own_time = [], []
+
     for index, cur_row in data[::-1].iterrows():
         next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
         time_format = "%Y-%m-%d %H:%M:%S"
@@ -23,10 +24,14 @@ def add_reply_time(data: pd.DataFrame) -> pd.DataFrame:
             cur_row["date"][:19], time_format
         ) - datetime.datetime.strptime(next_row["date"][:19], time_format)
         if next_row["from_id"] != cur_row["from_id"]:
-            output_data.loc[index, "reply_btw_sender_time"] = time_diff.total_seconds()
+            reply_btw_sender_time.append(time_diff.total_seconds())
+            reply_btw_own_time.append(0)
         else:
-            output_data.loc[index, "reply_btw_own_time"] = time_diff.total_seconds()
-    return output_data
+            reply_btw_sender_time.append(0)
+            reply_btw_own_time.append(time_diff.total_seconds())
+
+    return reply_btw_sender_time, reply_btw_own_time
+
 
 
 def get_avg_subdialog_reply_time(data: pd.DataFrame) -> float:
@@ -42,21 +47,23 @@ def get_avg_subdialog_reply_time(data: pd.DataFrame) -> float:
     return reply_values[int(len(reply_values) / 100 * 50)]
 
 
-def add_subdialogs_ids(data: pd.DataFrame) -> pd.DataFrame:
+def add_subdialogs_ids(data: pd.DataFrame):
     """
     Returns subdialog id column @ given DataFrame (data),
     based on calculated time between subdialogs:
     Note: reply_time column should be in pd.DataFrame.
     """
-    output_data = pd.DataFrame(index=list(data.index))
-    subdialog_count = output_data["subdialog_id"] = 1
+    subdialog_count = 1
+    subdialog_ids = [1]
+    # subdialog_count = data["subdialog_id"] = 1
     min_delay = get_avg_subdialog_reply_time(data)
     for index, rows in data[:len(data) - 1].iterrows():
         reply_time = data.loc[index, "reply_btw_sender_time"]
         if reply_time > min_delay and reply_time:
             subdialog_count += 1
-        output_data.loc[index + 1, "subdialog_id"] = subdialog_count
-    return output_data
+        subdialog_ids.append(subdialog_count)
+
+    return subdialog_ids
 
 
 def add_typing_speed(df: pd.DataFrame) -> pd.DataFrame:
@@ -96,6 +103,7 @@ def add_user_gender(data: pd.DataFrame) -> pd.DataFrame:
     works in ua/ru languages.
     """
     pass
+
 
 
 def add_subdialogs_langs(data):
@@ -150,17 +158,17 @@ def prepare_dialogs(
         if dialog_datetime <= start_date:
             break
 
-        # if start_date < dialog_datetime < end_date:
-        if not pd.isnull(row["message"]):
-            data.at[index, "preprocessed_message"] = transform_raw_data(
-                data.loc[index, "preprocessed_message"], lang, function_type, cube
-            )
-            print(f"INDEX {index} from {data.index[-1]}")
+        if start_date < dialog_datetime < end_date:
+            if not pd.isnull(row["message"]):
+                data.at[index, "preprocessed_message"] = transform_raw_data(
+                    data.loc[index, "preprocessed_message"], lang, function_type, cube
+                )
+                print(f"INDEX {index} from {data.index[-1]}")
 
     if additional_options == "add_lang_column":
         data["dialog_language"] = lang
 
-    data.to_csv(f"{prep_path}/{dialog_id}.csv")
+    data.to_csv(f"{prep_path}/{dialog_id}.csv", index = False)
     logging.warning("saved dialog!")
 
 
@@ -269,6 +277,7 @@ def prepare_dialogs_sorted_by_lang(
             data = pd.read_csv(f"{dialog_path}/{filename}")
             lang = detect_data_language(data)
             dialog_ids_sorted_by_lang[lang].append(filename[:-4])
+
     else:
         for dialog in dialog_ids:
             data = pd.read_csv(f"{dialog_path}/{dialog}.csv")
