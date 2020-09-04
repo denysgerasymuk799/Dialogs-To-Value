@@ -17,17 +17,17 @@ from utils.dialog_manipulation import add_reply_time, add_subdialogs_ids
 # input dialogs_ids (it should be a list) or -1 for all
 DIALOGS_IDS = [-1]
 DEBUG_MODE = 0
-DIALOG_PATH = os.path.join('data', 'all_dialogs2')
+DIALOG_PATH = os.path.join('data', 'new_type_dialogs')
 LOGS_PATH = 'logs/project_logs.log'
 
-FINAL_DF_NAME = "final_all3.csv"
-PATH_TO_PREPARED_DIALOGS = os.path.join("data", "all_prepared_dialogs2")
-PATH_TO_SAVE_GENERAL_DF = os.path.join("data", "all_prepared_dialogs2", FINAL_DF_NAME)
+FINAL_DF_NAME = "general_df.csv"
+PATH_TO_PREPARED_DIALOGS = os.path.join("data", "new_type_dialogs_prepared")
+PATH_TO_SAVE_GENERAL_DF = os.path.join("data", "new_type_dialogs_prepared", FINAL_DF_NAME)
 
 # change to date range in what you want to analyse messages of user_id_get_msg - from START_DATE to END_DATE;
 # format "%Y-%m-%d %H:%M:%S"
 START_DATE = datetime.datetime(2016, 8, 9, 0, 0, 0)
-END_DATE = datetime.datetime(2020, 8, 10, 0, 0, 0)
+END_DATE = datetime.datetime(2020, 9, 4, 0, 0, 0)
 
 if DEBUG_MODE:
     logging.basicConfig(filename=LOGS_PATH, level=logging.DEBUG)
@@ -58,7 +58,9 @@ len_dialogs = len(DIALOGS_IDS)
 for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
     dialog_id = dialog_file.split('/')[-1]
 
-    if dialog_id == os.path.join(PATH_TO_PREPARED_DIALOGS, FINAL_DF_NAME):
+    if dialog_id == os.path.join(PATH_TO_PREPARED_DIALOGS, FINAL_DF_NAME) or\
+            not dialog_id[dialog_id.rfind('\\') + 2].isdigit():
+        print(f"=========WARNING: This file is not a dialog csv {dialog_id}\n we do not at it to general dataframe")
         continue
 
     if flag_get_all == 1:
@@ -76,8 +78,11 @@ for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
 
 general_df.rename(columns={'id': 'message_id'}, inplace=True)
 
-# general_df = general_df.drop("Unnamed: 0", axis=1)
-# general_df = general_df.drop("Unnamed: 0.1", axis=1)
+try:
+    general_df = general_df.drop("Unnamed: 0", axis=1)
+    general_df = general_df.drop("Unnamed: 0.1", axis=1)
+except Exception as err:
+    print(f"===========ERROR: {err}")
 
 cols = ['dialog ID', "message_id", "date", "from_id", 'to_id', 'fwd_from', 'dialog_language',
         'reply_btw_sender_time', 'reply_btw_own_time', 'subdialog_id', 'message', 'preprocessed_message']
