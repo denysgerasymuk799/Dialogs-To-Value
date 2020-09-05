@@ -15,12 +15,12 @@ from utils.dialog_manipulation import add_reply_time, add_subdialogs_ids
 
 
 # input dialogs_ids (it should be a list) or -1 for all
-DIALOGS_IDS = [-1]
+DIALOGS_IDS = [-1] # or such format -- DIALOGS_IDS = ['777000', '138918380', '147336686']
 DEBUG_MODE = 0
 DIALOG_PATH = os.path.join('data', 'new_type_dialogs')
 LOGS_PATH = 'logs/project_logs.log'
 
-FINAL_DF_NAME = "general_df.csv"
+FINAL_DF_NAME = "general_df4.csv"
 PATH_TO_PREPARED_DIALOGS = os.path.join("data", "new_type_dialogs_prepared")
 PATH_TO_SAVE_GENERAL_DF = os.path.join("data", "new_type_dialogs_prepared", FINAL_DF_NAME)
 
@@ -56,22 +56,23 @@ general_dialog_id = 0
 len_dialogs = len(DIALOGS_IDS)
 
 for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
-    dialog_id = dialog_file.split('/')[-1]
+    dialog_id = dialog_file.split('\\')[-1]
 
-    if dialog_id == os.path.join(PATH_TO_PREPARED_DIALOGS, FINAL_DF_NAME) or\
-            not dialog_id[dialog_id.rfind('\\') + 2].isdigit():
+    if dialog_id == FINAL_DF_NAME or\
+            not dialog_id[1].isdigit():
         print(f"=========WARNING: This file is not a dialog csv {dialog_id}\n we do not at it to general dataframe")
         continue
 
     if flag_get_all == 1:
-        dialog_id = str(dialog_id)[:-4]
-
-    data = pd.read_csv(dialog_file)
+        dialog_id = dialog_id[:-4]
+        data = pd.read_csv(dialog_file)
+    else:
+        data = pd.read_csv(os.path.join(PATH_TO_PREPARED_DIALOGS, dialog_file + '.csv'))
 
     data["reply_btw_sender_time"], data["reply_btw_own_time"] = add_reply_time(data)
     data["subdialog_id"] = add_subdialogs_ids(data)
 
-    data["dialog ID"] = n_dialog_id
+    data["dialog ID"] = dialog_id
 
     general_df = pd.concat([general_df, data])
     print(f"{n_dialog_id + 1} dialogs csv from {len_dialogs} succeeded")
