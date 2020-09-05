@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_ua_tonality_dict(dict_path="dicts/tone-dict-uk.tsv") :
+def get_old_ua_tonality_dict(dict_path="dicts/tone-dict-uk.tsv") :
     """
     Read dictionary of ukrainian words tonality and
     return is a a python dict
@@ -12,13 +12,25 @@ def get_ua_tonality_dict(dict_path="dicts/tone-dict-uk.tsv") :
     return tonality_dict_ua_old
 
 
-def get_old_ua_tonality_dict(dict_path="dicts/tone-dict-ua.csv") :
+def get_ua_tonality_dict(dict_path="dicts/tone-dict-ua.csv") :
     """
     Read dictionary of ukrainian words tonality and
     return is a a python dict
     """
     sentiment_data = pd.read_csv(dict_path)
     sentiment_dict = dict(zip(sentiment_data.iloc[:, 1], sentiment_data.iloc[:, 3]))
+
+    return sentiment_dict
+
+
+def get_ua_tonality_dict_combined(dict_path="dicts/tone-dict-uk-full.csv"):
+    """
+    Get combined ua tone dictionary
+    :param dict_path:
+    :return:
+    """
+    sentiment_data = pd.read_csv(dict_path)
+    sentiment_dict = dict(zip(sentiment_data.iloc[:, 0], sentiment_data.iloc[:, 1]))
 
     return sentiment_dict
 
@@ -56,7 +68,7 @@ def get_dict_intersection(dict1, dict2) :
     intesected_dataframe.to_csv("dicts/ukr-tone-dict-intersection", index=False)
 
 
-def combine_dict(dict_primary, dict_secondary, save_path="dicts/tone-dict-uk-full") :
+def combine_dict(dict_primary, dict_secondary, save_path="dicts/tone-dict-uk-full.csv") :
     """
     Combine two dictionaries.
     If words intersect, word of a primary dict replace the one of a
@@ -67,3 +79,7 @@ def combine_dict(dict_primary, dict_secondary, save_path="dicts/tone-dict-uk-ful
                          'sentiment' : list(dict_secondary.values())})
 
     data.to_csv(save_path, index=False)
+
+# new = get_ua_tonality_dict("../dicts/tone-dict-ua.csv")
+# old = get_old_ua_tonality_dict("../dicts/tone-dict-uk.tsv")
+# combine_dict(new, old, "../dicts/tone-dict-uk-full.csv")
