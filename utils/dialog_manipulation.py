@@ -4,7 +4,7 @@ import os
 from pprint import pprint
 
 import pandas as pd
-from cube.api import Cube
+# from cube.api import Cube
 
 from utils.text_data_transformation import transform_raw_data
 
@@ -16,13 +16,11 @@ def add_reply_time(data: pd.DataFrame):
     """
 
     reply_btw_sender_time, reply_btw_own_time = [], []
-
     for index, cur_row in data[::-1].iterrows():
         next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
         time_format = "%Y-%m-%d %H:%M:%S"
-        time_diff = datetime.datetime.strptime(
-            cur_row["date"][:19], time_format
-        ) - datetime.datetime.strptime(next_row["date"][:19], time_format)
+        time_diff = datetime.datetime.strptime(cur_row["date"][:19], time_format) \
+                    - datetime.datetime.strptime(next_row["date"][:19], time_format)
         if next_row["from_id"] != cur_row["from_id"]:
             reply_btw_sender_time.append(time_diff.total_seconds())
             reply_btw_own_time.append(0)
@@ -31,7 +29,6 @@ def add_reply_time(data: pd.DataFrame):
             reply_btw_own_time.append(time_diff.total_seconds())
 
     return reply_btw_sender_time, reply_btw_own_time
-
 
 
 def get_avg_subdialog_reply_time(data: pd.DataFrame) -> float:
@@ -89,21 +86,34 @@ def add_typing_speed(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(output)
 
 
+def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns columns with average stats for each subdialog
+    and with subdialog and dialog ID.
+    """
+    output_df = pd.concat([df['dialog_id'], df['subdialog_id']], axis=1, keys=['dialog_id', 'subdialog_id'])
+    adf = pd.DataFrame()
+    for dialog in list(df.groupby(['dialog_id']).groups.keys()):
+        gdf = df.groupby(df.dialog_id).get_group(dialog)
+        tdf = gdf.groupby('subdialog_id').agg(
+            words_num=pd.NamedAgg('message', aggfunc=lambda x: round(x.apply(lambda y: len(str(y).split())).mean(), 1)),
+            reply_time=pd.NamedAgg('reply_btw_sender_time', aggfunc=lambda x: round(x.mean(), 1)),
+            message_number=pd.NamedAgg('from_id', aggfunc=lambda x: int(len(x))),
+            # chars_num=pd.NamedAgg('message', aggfunc=lambda x: x.apply(lambda y: len(str(y))).mean()),
+        )  # TODO: ^ why cannot aggregate same column multiple times in df??
+        tdf['dialog_id'] = dialog
+        adf = pd.concat([adf, tdf])
+    output_df = pd.merge(output_df, adf, how='left', on=list(output_df.keys()))
+    # output_df.drop(['dialog_id', 'subdialog_id'], axis=1, inplace=True)
+    return output_df
+
+
 def add_sleep_bounds(data: pd.DataFrame) -> pd.DataFrame:
     """
     Returns avg sleep bounds for each user per weekdays.
     """
     # TODO: need to create new dataframe struct.
     pass
-
-
-def add_user_gender(data: pd.DataFrame) -> pd.DataFrame:
-    """
-    Returns possible gender based on verbs user uses,
-    works in ua/ru languages.
-    """
-    pass
-
 
 
 def add_subdialogs_langs(data):
@@ -168,11 +178,11 @@ def prepare_dialogs(
     if additional_options == "add_lang_column":
         data["dialog_language"] = lang
 
-    data.to_csv(f"{prep_path}/{dialog_id}.csv", index = False)
+    data.to_csv(f"{prep_path}/{dialog_id}.csv", index=False)
     logging.warning("saved dialog!")
 
 
-#TODO: add proper handler for empty message
+# TODO: add proper handler for empty message
 def detect_data_language(data, data_type=""):
     key_letters = {
         "ua": {
@@ -215,14 +225,14 @@ def detect_data_language(data, data_type=""):
             "total": 0,
         },
     }
-    
+
     dialog_step_msgs = []
     n_msgs_to_analyse = 150
-    
+
     if data_type == "subdialogs":
         n_msgs_to_analyse = 30
 
-#     print(len(data))
+    #     print(len(data))
     if data.index[-1] < n_msgs_to_analyse - 1:
         msgs_step = 1
     else:
@@ -252,7 +262,7 @@ def detect_data_language(data, data_type=""):
     # get total sum of all values in languages dicts
     # in key_letters to detect the most common language
     mx_total, mx_total_lang = 0, "ru"
-    
+
     for lang in key_letters.keys():
         key_letters[lang]["total"] = sum(key_letters[lang].values())
         if key_letters[lang]["total"] > mx_total:
@@ -281,7 +291,7 @@ def prepare_dialogs_sorted_by_lang(
 
     print("dialog_ids_sorted_by_lang")
     pprint(dialog_ids_sorted_by_lang)
-    
+
     n_all_dialogs = sum(
         [
             len(dialog_ids_sorted_by_lang[lang])
