@@ -1,3 +1,4 @@
+import json
 import re
 from word2number import w2n
 
@@ -189,21 +190,41 @@ def lemmatization(msg, lang, cube):
     :return: cleaned text from synonyms
     """
     lemmas = ""
+
+    try:
+        with open(os.path.join("..", "dicts", f"dict_lemmatized_{lang}_words.json"), "r", encoding="utf-8") as f:
+            dict_lemmatized_words = json.load(f)
+    except FileNotFoundError:
+        with open(os.path.join("dicts", f"dict_lemmatized_{lang}_words.json"), "r", encoding="utf-8") as f:
+            dict_lemmatized_words = json.load(f)
+
     if lang == "ru":
-        lemmas = " ".join(
-            pymorphy2.MorphAnalyzer().parse(np.unicode(word))[0].normal_form
-            for word in msg.split()
-        )
+        for word in msg.split():
+            try:
+                lemmas += " " + dict_lemmatized_words[word]
+
+            except KeyError:
+                lemma = pymorphy2.MorphAnalyzer().parse(np.unicode(word))[0].normal_form
+                lemmas += " " + lemma
+                dict_lemmatized_words[word] = lemma
 
     elif lang in ("ua", "en"):
-        sentences = cube(msg)
+        for word in msg.split():
+            try:
+                lemmas += " " + dict_lemmatized_words[word]
 
-        for sentence in sentences:  # note we selected the first sentence (sentence[0])
-            for entry in sentence:
-                lemmas += entry.lemma
-                # now, we look for a space after the lemma to add it as well
-                if not "SpaceAfter=No" in entry.space_after:
-                    lemmas += " "
+            except KeyError:
+                sentence = cube(word)
+
+                lemmas += " " + sentence[0][0].lemma
+                dict_lemmatized_words[word] = sentence[0][0].lemma
+
+    try:
+        with open(os.path.join("..", "dicts", f"dict_lemmatized_{lang}_words.json"), "w", encoding="utf-8") as f:
+            json.dump(dict_lemmatized_words, f, indent=4, ensure_ascii=False)
+    except FileNotFoundError:
+        with open(os.path.join("dicts", f"dict_lemmatized_{lang}_words.json"), "w", encoding="utf-8") as f:
+            json.dump(dict_lemmatized_words, f, indent=4, ensure_ascii=False)
 
     return lemmas
 

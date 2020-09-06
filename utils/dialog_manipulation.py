@@ -155,10 +155,10 @@ def prepare_dialogs(
         date_time = row["date"][:-6]
         dialog_datetime = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
 
-        if dialog_datetime <= start_date:
+        if dialog_datetime < start_date:
             break
 
-        if start_date < dialog_datetime < end_date:
+        if start_date <= dialog_datetime <= end_date:
             if not pd.isnull(row["message"]):
                 data.at[index, "preprocessed_message"] = transform_raw_data(
                     data.loc[index, "preprocessed_message"], lang, function_type, cube
@@ -174,10 +174,6 @@ def prepare_dialogs(
 
 #TODO: add proper handler for empty message
 def detect_data_language(data, data_type=""):
-    
-#     if len(data) == 0:
-#         return 'en'
-    
     key_letters = {
         "ua": {
             "є": 0,
@@ -239,7 +235,6 @@ def detect_data_language(data, data_type=""):
         dialog_step_msgs.append(data["message"][i])
 
     for msg in dialog_step_msgs:
-#         print(msg)
         if not pd.isnull(msg):
             for letter in str(msg):
                 if letter in key_letters["ua"]:
@@ -256,11 +251,11 @@ def detect_data_language(data, data_type=""):
 
     # get total sum of all values in languages dicts
     # in key_letters to detect the most common language
-    mx_total, mx_total_lang = 0, ""
+    mx_total, mx_total_lang = 0, "ru"
     
     for lang in key_letters.keys():
         key_letters[lang]["total"] = sum(key_letters[lang].values())
-        if key_letters[lang]["total"] >= mx_total:
+        if key_letters[lang]["total"] > mx_total:
             mx_total_lang = lang
             mx_total = key_letters[lang]["total"]
 
@@ -285,6 +280,7 @@ def prepare_dialogs_sorted_by_lang(
             dialog_ids_sorted_by_lang[lang].append(dialog)
 
     print("dialog_ids_sorted_by_lang")
+    pprint(dialog_ids_sorted_by_lang)
     
     n_all_dialogs = sum(
         [
@@ -307,8 +303,13 @@ def prepare_dialogs_sorted_by_lang(
             cube.load("en")
 
         for dialog_id in dialog_ids_sorted_by_lang[lang]:
+            if f"{dialog_id}.csv" in os.listdir(prepared_path):
+                print(f"=========WARNING: {dialog_id}.csv already in {prepared_path}")
+                n_dialog += 1
+                continue
+
             n_dialog += 1
-            print(f"\n=======Language {lang} -- {n_dialog} from {n_all_dialogs}=======")
+            print(f"\n=======Language {lang}, dialog_id {dialog_id}-- {n_dialog} from {n_all_dialogs}=======")
             prepare_dialogs(
                 lang,
                 cube,
