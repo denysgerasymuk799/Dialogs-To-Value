@@ -26,7 +26,7 @@ def get_day_and_hour(date) :
     """
     date = datetime.fromisoformat(date)
 
-    return {'hour' : date.hour, 'day' : date.isoweekday()}
+    return date.hour, date.isoweekday()
 
 
 def get_week_day_from_number(week_day_num) :
