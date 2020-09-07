@@ -33,7 +33,6 @@ def add_reply_time(data: pd.DataFrame):
     return reply_btw_sender_time, reply_btw_own_time
 
 
-
 def get_avg_subdialog_reply_time(data: pd.DataFrame) -> float:
     """
     Finds average reply time after which it is considered
@@ -105,7 +104,6 @@ def add_user_gender(data: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
-
 def add_subdialogs_langs(data):
     n_subdialog, n_subdialog_msgs = 1, 0
     start_subdialog_n_row = 0
@@ -168,61 +166,89 @@ def prepare_dialogs(
     if additional_options == "add_lang_column":
         data["dialog_language"] = lang
 
-    data.to_csv(f"{prep_path}/{dialog_id}.csv", index = False)
+    data.to_csv(f"{prep_path}/{dialog_id}.csv", index=False)
     logging.warning("saved dialog!")
 
 
-#TODO: add proper handler for empty message
-def detect_data_language(data, data_type=""):
-    key_letters = {
-        "ua": {
-            "є": 0,
-            "і": 0,
-            "ї": 0,
-            "б": 0,
-            "д": 0,
-            "г": 0,
-            "п": 0,
-            "ц": 0,
-            "я": 0,
-            "ю": 0,
-            "total": 0,
-        },
-        "ru": {
-            "ё": 0,
-            "б": 0,
-            "д": 0,
-            "г": 0,
-            "п": 0,
-            "ц": 0,
-            "я": 0,
-            "ю": 0,
-            "ы": 0,
-            "э": 0,
-            "total": 0,
-        },
-        "en": {
-            "d": 0,
-            "f": 0,
-            "g": 0,
-            "j": 0,
-            "q": 0,
-            "r": 0,
-            "s": 0,
-            "v": 0,
-            "w": 0,
-            "z": 0,
-            "total": 0,
-        },
-    }
-    
+def if_name_in_ukr_dict(first_name, names_df):
+    letter_indexes = []
+    if first_name[0] in ('и', 'і'):
+        first_name = first_name[1:]
+
+    for index, letter in enumerate(first_name):
+        if letter in ('и', 'і'):
+            letter_indexes.append(index)
+
+    if len(letter_indexes) == 0:
+        return False
+
+    name_pattern, name_capitalize_pattern = '', ''
+    start_pos_substr = -1
+    for pos in range(len(letter_indexes)):
+        name_pattern += first_name[start_pos_substr + 1: letter_indexes[pos]] + '[іи]'
+        start_pos_substr = letter_indexes[pos]
+
+    name_pattern += first_name[letter_indexes[len(letter_indexes) - 1] + 1:]
+    # print("name_pattern", name_pattern)
+
+    df_loc = names_df.loc[names_df['name'].str.contains(r'{}$'.format(name_pattern))]
+    if not df_loc.empty:
+        # print('===df_loc', df_loc)
+        return True
+
+    else:
+        df_loc_capitalize = names_df.loc[names_df['name'].str.contains(r'{}$'.format(name_pattern.capitalize()))]
+        if not df_loc_capitalize.empty:
+            # print('==df_loc_capitalize', df_loc_capitalize)
+            return True
+
+    return False
+
+
+def get_user_step_msgs(path_to_general_dialogs_df, dialog_id, user_id, n_msgs):
+    general_df = pd.read_csv(path_to_general_dialogs_df)
+
+    if general_df.index[-1] < n_msgs - 1:
+        msgs_step = 1
+    else:
+        # in such way with msgs_step I can get 150 messages
+        # which are at the different parts of the dialog, so
+        # when I analyse there 150 msgs I can get a real language
+        try:
+            msgs_step = (general_df[(general_df["dialog ID"] == dialog_id) &
+                                    (general_df['from_id'] == user_id)].index[-1] -
+                         general_df[(general_df["dialog ID"] == dialog_id) &
+                                    (general_df['from_id'] == user_id)].index[0]) // n_msgs
+        except IndexError:
+            print(f'WARNING: this dialog_id {dialog_id} and user_id {user_id} no in {path_to_general_dialogs_df}\n'
+                  f'Maybe this person do not write anything in the dialog')
+            return []
+
     dialog_step_msgs = []
-    n_msgs_to_analyse = 150
-    
+    if general_df.index[-1] == 0:
+        dialog_step_msgs.append(general_df["message"][0])
+    else:
+        n_row = 0
+        for index, row in general_df[(general_df["dialog ID"] == dialog_id) &
+                                     (general_df['from_id'] == user_id)].iterrows():
+            if not pd.isnull(row.message):
+                if n_row % msgs_step == 0:
+                    dialog_step_msgs.append(row.message)
+                    n_msgs -= 1
+                    if n_msgs == 0:
+                        break
+
+            n_row += 1
+
+    return dialog_step_msgs
+
+
+def get_dialog_step_msgs(data, data_type, n_msgs_to_analyse):
+    dialog_step_msgs = []
+
     if data_type == "subdialogs":
         n_msgs_to_analyse = 30
 
-#     print(len(data))
     if data.index[-1] < n_msgs_to_analyse - 1:
         msgs_step = 1
     else:
@@ -231,8 +257,108 @@ def detect_data_language(data, data_type=""):
         # when I analyse there 150 msgs I can get a real language
         msgs_step = data.index[-1] // n_msgs_to_analyse
 
-    for i in range(0, data.index[-1], msgs_step):
-        dialog_step_msgs.append(data["message"][i])
+    if data.index[-1] == 0:
+        dialog_step_msgs.append(data["message"][0])
+    else:
+        for i in range(data.index[0], data.index[-1], msgs_step):
+            dialog_step_msgs.append(data["message"][i])
+
+    return dialog_step_msgs
+
+
+def detect_data_language(data, data_type="", path_to_general_dialogs_df='',
+                         dialog_id='', user_id=''):
+    if data_type == 'one_word':
+        key_letters = {
+            "ua": {
+                'а': 0, 'б': 0, 'в': 0,
+                'г': 0, 'ґ': 0, 'д': 0,
+                'е': 0, 'є': 0, 'ж': 0,
+                'з': 0, 'і': 0, 'и': 0,
+                'ї': 0, 'й': 0, 'к': 0,
+                'л': 0, 'м': 0, 'н': 0,
+                'о': 0, 'п': 0, 'р': 0,
+                'с': 0, 'т': 0, 'у': 0,
+                'ф': 0, 'х': 0, 'ц': 0,
+                'ч': 0, 'ш': 0, 'щ': 0,
+                'ь': 0, 'ю': 0, 'я': 0,
+                "total": 0
+            },
+            "ru": {
+                'а': 0, 'б': 0, 'в': 0,
+                'г': 0, 'д': 0, 'е': 0,
+                'ё': 0, 'ж': 0, 'з': 0,
+                'и': 0, 'й': 0, 'к': 0,
+                'л': 0, 'м': 0, 'н': 0,
+                'о': 0, 'п': 0, 'р': 0,
+                'с': 0, 'т': 0, 'у': 0,
+                'ф': 0, 'х': 0, 'ц': 0,
+                'ч': 0, 'ш': 0, 'щ': 0,
+                'ъ': 0, 'э': 0, 'ы': 0,
+                'ь': 0, 'ю': 0, 'я': 0,
+                "total": 0,
+            },
+            "en": {
+                  'a': 0, 'b': 0, 'c': 0,
+                  'd': 0, 'e': 0, 'f': 0,
+                  'g': 0, 'h': 0, 'i': 0,
+                  'j': 0, 'k': 0, 'l': 0,
+                  'm': 0, 'n': 0, 'o': 0,
+                  'о': 0, 'п': 0, 'р': 0,
+                  'p': 0, 'r': 0, 's': 0,
+                  't': 0, 'u': 0, 'v': 0,
+                  'w': 0, 'x': 0, 'y': 0,
+                  'z': 0,
+                  "total": 0,
+            },
+        }
+    else:
+        key_letters = {
+            "ua": {
+                "є": 0,
+                "і": 0,
+                "ї": 0,
+                "б": 0,
+                "д": 0,
+                "г": 0,
+                "п": 0,
+                "ц": 0,
+                "я": 0,
+                "ю": 0,
+                "total": 0,
+            },
+            "ru": {
+                "ё": 0,
+                "б": 0,
+                "д": 0,
+                "г": 0,
+                "п": 0,
+                "ц": 0,
+                "я": 0,
+                "ю": 0,
+                "ы": 0,
+                "э": 0,
+                "total": 0,
+            },
+            "en": {
+                "d": 0,
+                "f": 0,
+                "g": 0,
+                "j": 0,
+                "q": 0,
+                "r": 0,
+                "s": 0,
+                "v": 0,
+                "w": 0,
+                "z": 0,
+                "total": 0,
+            },
+        }
+
+    if data_type == 'df_loc':
+        dialog_step_msgs = get_user_step_msgs(path_to_general_dialogs_df, dialog_id, user_id, 150)
+    else:
+        dialog_step_msgs = get_dialog_step_msgs(data, data_type, 150)
 
     for msg in dialog_step_msgs:
         if not pd.isnull(msg):
@@ -245,14 +371,14 @@ def detect_data_language(data, data_type=""):
                     lang = "ru"
                     key_letters[lang][letter] += 1
 
-                elif letter in key_letters["en"]:
+                if letter in key_letters["en"]:
                     lang = "en"
                     key_letters[lang][letter] += 1
 
     # get total sum of all values in languages dicts
     # in key_letters to detect the most common language
     mx_total, mx_total_lang = 0, "ru"
-    
+
     for lang in key_letters.keys():
         key_letters[lang]["total"] = sum(key_letters[lang].values())
         if key_letters[lang]["total"] > mx_total:
@@ -281,7 +407,7 @@ def prepare_dialogs_sorted_by_lang(
 
     print("dialog_ids_sorted_by_lang")
     pprint(dialog_ids_sorted_by_lang)
-    
+
     n_all_dialogs = sum(
         [
             len(dialog_ids_sorted_by_lang[lang])

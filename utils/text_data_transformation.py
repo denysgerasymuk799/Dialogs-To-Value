@@ -244,16 +244,17 @@ def clean_message(msg: str) -> str:
     return re.sub(r"\s\s+", " ", " ".join(out_msg))
 
 
-def transform_raw_data(msg, lang, function_type, cube):
+def transform_raw_data(msg, lang, function_type, cube, clean_type=''):
     msg = convert_lower_case(msg)
     msg = clean_message(msg)
     msg = re.sub(
         "\-\s\r\n\s{1,}|\-\s\r\n|\r\n", "", msg
     )  # deleting newlines and line-breaks
-    msg = convert_numbers(msg, function_type)
     msg = remove_stop_words(msg, lang)
 
     # msg = stemming(msg, lang)
-    msg = lemmatization(msg, lang, cube)
+    if clean_type != 'without_lemma':
+        msg = convert_numbers(msg, function_type)
+        msg = lemmatization(msg, lang, cube)
     return msg
 
