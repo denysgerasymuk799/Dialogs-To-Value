@@ -2,10 +2,10 @@
 !tone-dict-ua.csv
 !tone-dict-ru.csv
 
-!dicts/female_russian_names.csv
-!dicts/female_ukrainian_names.csv
-!dicts/male_ukrainian_names.csv
-!dicts/male_russian_names.csv
+!dicts/*.csv
+!dicts/*.txt
+!dicts/*.json
+
 
 data/*
 

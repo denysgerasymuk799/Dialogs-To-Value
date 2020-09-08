@@ -170,7 +170,7 @@ def prepare_dialogs(
     logging.warning("saved dialog!")
 
 
-def if_name_in_ukr_dict(first_name, names_df):
+def if_name_in_dict(first_name, names_df):
     letter_indexes = []
     if first_name[0] in ('и', 'і'):
         first_name = first_name[1:]
