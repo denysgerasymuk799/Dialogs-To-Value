@@ -34,15 +34,15 @@ END_DATE = datetime.datetime(2020, 9, 4, 0, 0, 0)
 if DEBUG_MODE:
     logging.basicConfig(filename=LOGS_PATH, level=logging.DEBUG)
 
-# if os.path.isdir(DIALOG_PATH):
-#     if not os.path.isdir(PATH_TO_PREPARED_DIALOGS):
-#         os.mkdir(PATH_TO_PREPARED_DIALOGS)
-#
-#     prepare_dialogs_sorted_by_lang(DIALOGS_IDS, DIALOG_PATH, PATH_TO_PREPARED_DIALOGS,
-#                                    START_DATE, END_DATE, "add_lang_column")
-#
-# else:
-#     logging.error('Dialogs dir does not exist !')
+if os.path.isdir(DIALOG_PATH):
+    if not os.path.isdir(PATH_TO_PREPARED_DIALOGS):
+        os.mkdir(PATH_TO_PREPARED_DIALOGS)
+
+    prepare_dialogs_sorted_by_lang(DIALOGS_IDS, DIALOG_PATH, PATH_TO_PREPARED_DIALOGS,
+                                   START_DATE, END_DATE, "add_lang_column")
+
+else:
+    logging.error('Dialogs dir does not exist !')
 
 flag_get_all = 0
 
