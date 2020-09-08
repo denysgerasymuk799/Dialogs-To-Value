@@ -17,7 +17,7 @@ from utils.dialog_manipulation import add_reply_time, add_subdialogs_ids
 # input dialogs_ids (it should be a list) or -1 for all
 DIALOGS_IDS = [-1] # or such format -- DIALOGS_IDS = ['777000', '138918380', '147336686']
 DEBUG_MODE = 0
-DIALOG_PATH = os.path.join('data', 'new_type_dialogs')
+DIALOG_PATH = os.path.join('data', 'dialogs')
 LOGS_PATH = 'logs/project_logs.log'
 
 FINAL_DF_NAME = "general_df4.csv"
@@ -56,7 +56,7 @@ general_dialog_id = 0
 len_dialogs = len(DIALOGS_IDS)
 
 for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
-    dialog_id = dialog_file.split('\\')[-1]
+    dialog_id = os.path.basename(dialog_file)
 
     if dialog_id == FINAL_DF_NAME or\
             not dialog_id[1].isdigit():
@@ -66,6 +66,7 @@ for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
     if flag_get_all == 1:
         dialog_id = dialog_id[:-4]
         data = pd.read_csv(dialog_file)
+
     else:
         data = pd.read_csv(os.path.join(PATH_TO_PREPARED_DIALOGS, dialog_file + '.csv'))
 
