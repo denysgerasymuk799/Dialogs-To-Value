@@ -205,8 +205,11 @@ def if_name_in_dict(first_name, names_df):
     return False
 
 
-def get_user_step_msgs(path_to_general_dialogs_df, dialog_id, user_id, n_msgs):
-    general_df = pd.read_csv(path_to_general_dialogs_df)
+def get_user_step_msgs(path_to_general_dialogs_df, dialog_id, user_id, n_msgs, user_general_df=''):
+    if user_general_df == '':
+        general_df = pd.read_csv(path_to_general_dialogs_df)
+    else:
+        general_df = user_general_df
 
     if general_df.index[-1] < n_msgs - 1:
         msgs_step = 1
