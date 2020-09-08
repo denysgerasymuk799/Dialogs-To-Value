@@ -5,8 +5,10 @@ import os
 import glob
 import re
 from pprint import pprint
+from random import choice
 
 import pandas as pd
+from docutils.nodes import math
 
 from utils.dialog_manipulation import prepare_dialogs_sorted_by_lang
 from utils.dialog_manipulation import add_reply_time, add_subdialogs_ids
@@ -78,6 +80,7 @@ with open(os.path.join(PATH_TO_SAVE_PROCESSED_FILES, "all_dialogs_info.json"), "
 frames = []
 
 general_df = pd.DataFrame()
+
 general_n_subdialogs = 0
 general_dialog_id = 0
 len_dialogs = len(DIALOGS_IDS)
