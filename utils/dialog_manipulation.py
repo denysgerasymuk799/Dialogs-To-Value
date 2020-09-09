@@ -4,7 +4,7 @@ import os
 from pprint import pprint
 
 import pandas as pd
-# from cube.api import Cube
+from cube.api import Cube
 
 from utils.text_data_transformation import transform_raw_data
 
@@ -19,14 +19,15 @@ def add_reply_time(data: pd.DataFrame):
     for index, cur_row in data[::-1].iterrows():
         next_row = cur_row if index == data.index.size - 1 else data.iloc[index + 1]
         time_format = "%Y-%m-%d %H:%M:%S"
-        time_diff = datetime.datetime.strptime(cur_row["date"][:19], time_format) \
-                    - datetime.datetime.strptime(next_row["date"][:19], time_format)
+        time_diff = datetime.datetime.strptime(
+            cur_row["date"][:19], time_format
+        ) - datetime.datetime.strptime(next_row["date"][:19], time_format)
         if next_row["from_id"] != cur_row["from_id"]:
-            reply_btw_sender_time.append(time_diff.total_seconds())
+            reply_btw_sender_time.append(round(time_diff.total_seconds()))
             reply_btw_own_time.append(0)
         else:
             reply_btw_sender_time.append(0)
-            reply_btw_own_time.append(time_diff.total_seconds())
+            reply_btw_own_time.append(round(time_diff.total_seconds()))
 
     return reply_btw_sender_time, reply_btw_own_time
 
@@ -96,9 +97,10 @@ def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
     for dialog in list(df.groupby(['dialog_id']).groups.keys()):
         gdf = df.groupby(df.dialog_id).get_group(dialog)
         tdf = gdf.groupby('subdialog_id').agg(
-            words_num=pd.NamedAgg('message', aggfunc=lambda x: round(x.apply(lambda y: len(str(y).split())).mean(), 1)),
-            reply_time=pd.NamedAgg('reply_btw_sender_time', aggfunc=lambda x: round(x.mean(), 1)),
-            message_number=pd.NamedAgg('from_id', aggfunc=lambda x: int(len(x))),
+            words_num_mean=pd.NamedAgg('message',
+                                       aggfunc=lambda x: round(x.apply(lambda y: len(str(y).split())).mean(), 1)),
+            reply_time_mean=pd.NamedAgg('reply_btw_sender_time', aggfunc=lambda x: round(x.mean(), 1)),
+            message_number_mean=pd.NamedAgg('from_id', aggfunc=lambda x: int(len(x))),
             # chars_num=pd.NamedAgg('message', aggfunc=lambda x: x.apply(lambda y: len(str(y))).mean()),
         )  # TODO: ^ why cannot aggregate same column multiple times in df??
         tdf['dialog_id'] = dialog
@@ -108,12 +110,36 @@ def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
     return output_df
 
 
-def add_sleep_bounds(data: pd.DataFrame) -> pd.DataFrame:
+def add_sleep_bounds(df: pd.DataFrame) -> dict:
     """
-    Returns avg sleep bounds for each user per weekdays.
+    Returns avg sleep bounds for each user.
     """
-    # TODO: need to create new dataframe struct.
-    pass
+    def _get_sleep_hours(data: pd.DataFrame) -> tuple:
+        MINIMUM_SLEEP_TIME = 60 * 3
+        data = data[data.reply_btw_sender_time > MINIMUM_SLEEP_TIME]
+        if not len(data):
+            return -1, -1
+
+        time_format = "%Y-%m-%d %H:%M:%S"
+        data['sleep_end'] = data.apply(lambda x: datetime.datetime.strptime(x["date"][:19], time_format).hour, axis=1)
+        data['sleep_start'] = data.apply(lambda x: (datetime.datetime.strptime(x["date"][:19], time_format) - datetime.timedelta(seconds=x['reply_btw_sender_time'])).hour, axis=1)
+        output = round(data['sleep_end'].mean()), round(data['sleep_start'].mean())
+        data.drop(['sleep_end', 'sleep_start'], axis=1, inplace=True)
+        return output
+
+    output = {'user_id': [], 'get_up_hour': [], 'go_bed_hour': []}
+    gdf = df.groupby(df.from_id)
+    for user in list(gdf.groups.keys()):
+        tdf = gdf.get_group(user)
+        cut_off = int(len(tdf) / 100 * 10)
+        tdf = tdf[cut_off:-cut_off] if cut_off else tdf
+        tdf = tdf.sort_values('reply_btw_sender_time')[int(len(tdf) / 100 * 40):]
+        sleep_hours = _get_sleep_hours(tdf)
+
+        output['user_id'].append(user)
+        output['get_up_hour'].append(sleep_hours[1])
+        output['go_bed_hour'].append(sleep_hours[0])
+    return output
 
 
 def add_subdialogs_langs(data):
