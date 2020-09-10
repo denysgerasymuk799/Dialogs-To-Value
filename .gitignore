@@ -3,6 +3,11 @@
 !tone-dict-ru.csv
 !tone-dict-uk-full.csv
 
+!dicts/*.csv
+!dicts/*.txt
+!dicts/*.json
+
+
 data/*
 
 logs/*
