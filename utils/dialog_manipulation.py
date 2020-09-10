@@ -2,9 +2,9 @@ import datetime
 import logging
 import os
 from pprint import pprint
-
+import copy
 import pandas as pd
-from cube.api import Cube
+# from cube.api import Cube
 
 from utils.text_data_transformation import transform_raw_data
 
@@ -73,7 +73,7 @@ def add_typing_speed(df: pd.DataFrame) -> pd.DataFrame:
     def get_msg_typing_time(row):
         time = row['reply_btw_own_time'] if row['reply_btw_own_time'] else row['reply_btw_sender_time']
         if not time:
-            return 0
+            return 0.1
         else:
             return time / 60
 
@@ -81,10 +81,11 @@ def add_typing_speed(df: pd.DataFrame) -> pd.DataFrame:
     for subdialog in list(df.groupby(['subdialog_id']).groups.keys()):
         gdf = df.groupby(df.subdialog_id).get_group(subdialog)[:-1:]
         output['wpm'] += list(
-            gdf.apply(lambda row: round(len(row['message'].split()) / get_msg_typing_time(row)), axis=1)) + [0]
+            gdf.apply(lambda row: round(len(str(row['message']).split()) / get_msg_typing_time(row)), axis=1)) + [0]
         output['cpm'] += list(
-            gdf.apply(lambda row: round(len(row['message']) / get_msg_typing_time(row)), axis=1)) + [0]
-    return pd.DataFrame(output)
+            gdf.apply(lambda row: round(len(str(row['message'])) / get_msg_typing_time(row)), axis=1)) + [0]
+
+    return output
 
 
 def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
@@ -106,7 +107,6 @@ def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
         tdf['dialog_id'] = dialog
         adf = pd.concat([adf, tdf])
     output_df = pd.merge(output_df, adf, how='left', on=list(output_df.keys()))
-    # output_df.drop(['dialog_id', 'subdialog_id'], axis=1, inplace=True)
     return output_df
 
 
@@ -126,7 +126,7 @@ def add_sleep_bounds(df: pd.DataFrame) -> dict:
         output = round(data['sleep_end'].mean()), round(data['sleep_start'].mean())
         data.drop(['sleep_end', 'sleep_start'], axis=1, inplace=True)
         return output
-
+    df = copy.deepcopy(df)
     output = {'user_id': [], 'get_up_hour': [], 'go_bed_hour': []}
     gdf = df.groupby(df.from_id)
     for user in list(gdf.groups.keys()):
