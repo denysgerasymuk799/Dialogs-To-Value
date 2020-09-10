@@ -90,7 +90,7 @@ for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
 
     if dialog_id == FINAL_DF_NAME or\
             not dialog_id[1].isdigit():
-        print(f"=========WARNING: This file is not a dialog csv {dialog_id}\n we do not at it to general dataframe")
+        print(f"=========WARNING: This file is not a dialog csv {dialog_id}\n we do not add it to general dataframe")
         continue
 
     if flag_get_all == 1:
