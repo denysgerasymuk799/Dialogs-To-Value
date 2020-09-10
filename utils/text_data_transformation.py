@@ -250,11 +250,10 @@ def transform_raw_data(msg, lang, function_type, cube, clean_type=''):
     msg = re.sub(
         "\-\s\r\n\s{1,}|\-\s\r\n|\r\n", "", msg
     )  # deleting newlines and line-breaks
+    msg = convert_numbers(msg, function_type)
     msg = remove_stop_words(msg, lang)
 
-    # msg = stemming(msg, lang)
     if clean_type != 'without_lemma':
-        msg = convert_numbers(msg, function_type)
         msg = lemmatization(msg, lang, cube)
     return msg
 

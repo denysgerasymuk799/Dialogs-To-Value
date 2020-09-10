@@ -4,7 +4,7 @@ import os
 from pprint import pprint
 import copy
 import pandas as pd
-# from cube.api import Cube
+from cube.api import Cube
 
 from utils.text_data_transformation import transform_raw_data
 
@@ -93,10 +93,10 @@ def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
     Returns columns with average stats for each subdialog
     and with subdialog and dialog ID.
     """
-    output_df = pd.concat([df['dialog_id'], df['subdialog_id']], axis=1, keys=['dialog_id', 'subdialog_id'])
+    output_df = pd.concat([df['dialog ID'], df['subdialog_id']], axis=1, keys=['dialog ID', 'subdialog_id'])
     adf = pd.DataFrame()
-    for dialog in list(df.groupby(['dialog_id']).groups.keys()):
-        gdf = df.groupby(df.dialog_id).get_group(dialog)
+    for dialog in list(df.groupby(['dialog ID']).groups.keys()):
+        gdf = df.groupby(df['dialog ID']).get_group(dialog)
         tdf = gdf.groupby('subdialog_id').agg(
             words_num_mean=pd.NamedAgg('message',
                                        aggfunc=lambda x: round(x.apply(lambda y: len(str(y).split())).mean(), 1)),
@@ -104,7 +104,7 @@ def add_subdialogs_stats(df: pd.DataFrame) -> pd.DataFrame:
             message_number_mean=pd.NamedAgg('from_id', aggfunc=lambda x: int(len(x))),
             # chars_num=pd.NamedAgg('message', aggfunc=lambda x: x.apply(lambda y: len(str(y))).mean()),
         )  # TODO: ^ why cannot aggregate same column multiple times in df??
-        tdf['dialog_id'] = dialog
+        tdf['dialog ID'] = dialog
         adf = pd.concat([adf, tdf])
     output_df = pd.merge(output_df, adf, how='left', on=list(output_df.keys()))
     return output_df
@@ -207,7 +207,6 @@ def prepare_dialogs(
     logging.warning("saved dialog!")
 
 
-
 def if_name_in_dict(first_name, names_df):
     letter_indexes = []
     if first_name[0] in ('и', 'і'):
@@ -227,26 +226,25 @@ def if_name_in_dict(first_name, names_df):
         start_pos_substr = letter_indexes[pos]
 
     name_pattern += first_name[letter_indexes[len(letter_indexes) - 1] + 1:]
-    # print("name_pattern", name_pattern)
 
     df_loc = names_df.loc[names_df['name'].str.contains(r'{}$'.format(name_pattern))]
     if not df_loc.empty:
-        # print('===df_loc', df_loc)
         return True
 
     else:
         df_loc_capitalize = names_df.loc[names_df['name'].str.contains(r'{}$'.format(name_pattern.capitalize()))]
         if not df_loc_capitalize.empty:
-            # print('==df_loc_capitalize', df_loc_capitalize)
             return True
 
     return False
 
 
 def get_user_step_msgs(path_to_general_dialogs_df, dialog_id, user_id, n_msgs, user_general_df=''):
-    if user_general_df == '':
-        general_df = pd.read_csv(path_to_general_dialogs_df)
-    else:
+    try:
+        if user_general_df == '':
+            general_df = pd.read_csv(path_to_general_dialogs_df)
+
+    except ValueError:
         general_df = user_general_df
 
     if general_df.index[-1] < n_msgs - 1:
@@ -287,10 +285,11 @@ def get_user_step_msgs(path_to_general_dialogs_df, dialog_id, user_id, n_msgs, u
 def get_dialog_step_msgs(data, data_type, n_msgs_to_analyse):
     dialog_step_msgs = []
 
-
     if data_type == "subdialogs":
         n_msgs_to_analyse = 30
 
+    print('data.index[-1]', data.index[-1])
+    print('n_msgs_to_analyse', n_msgs_to_analyse)
     if data.index[-1] < n_msgs_to_analyse - 1:
         msgs_step = 1
     else:

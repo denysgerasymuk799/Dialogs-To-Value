@@ -4,7 +4,8 @@
 1. pip install -r requirements.txt
 2. pip install git+https://github.com/Desklop/Uk_Stemmer@master#egg=uk_stemmer
 
-
+download Cube
+it can take time: 50 dialogs with 100 messages = 42 min
 
 ## word_frequency_in_dialogs.ipynb
 
