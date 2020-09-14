@@ -9,7 +9,7 @@ DEBUG_MODE = 0
 PATH_TO_DIALOGS_CSV = os.path.join('data', 'dialogs')
 
 # folder with jsons of dialogs_meta from 'telegram-data-collection/0_download_dialogs_list.py'
-PATH_TO_DIALOGS_META = os.path.join("data", "dialogs_meta")
+PATH_TO_DIALOGS_META = os.path.join("data", "dialogs_list")
 
 LOGS_PATH = os.path.join('logs', 'project_logs.log')
 

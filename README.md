@@ -17,3 +17,10 @@ it can take time: 50 dialogs with 100 messages = 42 min
 
 3) Use telegram-data-collection/0_download_dialogs_list.py and 1_download_dialogs_data.py
 to get some files to analyse (DO NOT forget to change global variables of paths to dirs at the beginning of the module)
+
+
+# (TODO) structure
+0. short description and images
+1. how to install dependency, and prepare env
+2. instructions how to use our tool: download data, prep it and short one sentence description for each module
+3. team and contributors
