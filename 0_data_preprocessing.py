@@ -22,15 +22,15 @@ if DEBUG_MODE:
     logging.basicConfig(filename=LOGS_PATH, level=logging.DEBUG)
 
 
-# if os.path.isdir(PATH_TO_DIALOGS_CSV):
-#     if not os.path.isdir(PATH_TO_PREPARED_DIALOGS):
-#         os.mkdir(PATH_TO_PREPARED_DIALOGS)
-#
-#     prepare_dialogs_sorted_by_lang(DIALOGS_IDS, PATH_TO_DIALOGS_CSV, PATH_TO_PREPARED_DIALOGS,
-#                                    START_DATE, END_DATE, "add_lang_column")
-#
-# else:
-#     logging.error('Dialogs dir does not exist !')
+if os.path.isdir(PATH_TO_DIALOGS_CSV):
+    if not os.path.isdir(PATH_TO_PREPARED_DIALOGS):
+        os.mkdir(PATH_TO_PREPARED_DIALOGS)
+
+    prepare_dialogs_sorted_by_lang(DIALOGS_IDS, PATH_TO_DIALOGS_CSV, PATH_TO_PREPARED_DIALOGS,
+                                   START_DATE, END_DATE, "add_lang_column")
+
+else:
+    logging.error('Dialogs dir does not exist !')
 
 flag_get_all = 0
 
@@ -117,11 +117,11 @@ for n_dialog_id, dialog_file in enumerate(DIALOGS_IDS):
 
 general_df.rename(columns={'id': 'message_id'}, inplace=True)
 
-# try:
-#     general_df = general_df.drop("Unnamed: 0", axis=1)
-#     general_df = general_df.drop("Unnamed: 0.1", axis=1)
-# except Exception as err:
-#     print(f"===========ERROR: {err}")
+try:
+    general_df = general_df.drop("Unnamed: 0", axis=1)
+    general_df = general_df.drop("Unnamed: 0.1", axis=1)
+except Exception as err:
+    print(f"===========ERROR: {err}")
 
 cols = ['dialog ID', "dialog_name", "message_id", "date", "from_id", 'to_id', 'fwd_from', 'dialog_language',
         'reply_btw_sender_time', 'reply_btw_own_time', 'subdialog_id', 'message', 'preprocessed_message']
@@ -130,7 +130,7 @@ rest_cols = [col for col in general_df.columns if col not in cols]
 
 # place long text columns at the end of df
 cols = cols[:-2] + rest_cols + cols[-2:]
-# general_df = general_df[cols]
+general_df = general_df[cols]
 
 general_df.to_csv(PATH_TO_SAVE_GENERAL_DF, index=False)
 print(f"Check {PATH_TO_SAVE_PROCESSED_FILES} to see results")
