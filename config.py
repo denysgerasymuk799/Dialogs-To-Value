@@ -9,7 +9,7 @@ DEBUG_MODE = 0
 PATH_TO_DIALOGS_CSV = os.path.join('data', 'dialogs')
 
 # folder with jsons of dialogs_meta from 'telegram-data-collection/0_download_dialogs_list.py'
-PATH_TO_DIALOGS_META = os.path.join("data", "dialogs_list")
+PATH_TO_DIALOGS_META = os.path.join("data", "dialogs_meta")
 
 LOGS_PATH = os.path.join('logs', 'project_logs.log')
 
@@ -20,7 +20,7 @@ FINAL_DF_NAME = "general_df.csv"
 PATH_TO_PREPARED_DIALOGS = os.path.join("data", "dialogs_prepared")
 
 # folder to save results of modules
-PATH_TO_SAVE_PROCESSED_FILES = os.path.join("data", "processed_dialog_files11")
+PATH_TO_SAVE_PROCESSED_FILES = os.path.join("data", "processed_dialog_files2")
 PATH_TO_SAVE_GENERAL_DF = os.path.join(PATH_TO_SAVE_PROCESSED_FILES, FINAL_DF_NAME)
 
 # path to save file with statistics of all members in each dialog
