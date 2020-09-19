@@ -1,6 +1,5 @@
 import os
 
-
 # input dialogs_ids (it should be a list) or -1 for all, 
 # which you want to add to general dialogs dataframe
 DIALOGS_IDS = [-1]  # or such format -- DIALOGS_IDS = ['777000', '138918380', '147336686']
