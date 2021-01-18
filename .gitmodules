@@ -1,0 +1,3 @@
+[submodule "telegram-data-collection"]
+	path = telegram-data-collection
+	url = git@github.com:SanGreel/telegram-data-collection.git
