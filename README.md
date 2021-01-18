@@ -46,7 +46,7 @@ year, number of received or sent messages, people with whom and when communicate
 - 5_dialogs_lda.ipynb -- for each dialog, which we got before, generate topic based on LDA algo
 
 
-## Installation
+## Before
 
 0. install Python 3.7.4
 1. pip install -r requirements.txt
