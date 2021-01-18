@@ -1,24 +1,3 @@
-# Telegram dialogs analysis
-### 0. env preparation
-0. install Python 3.7.4
-1. pip install -r requirements.txt
-2. pip install git+https://github.com/Desklop/Uk_Stemmer@master#egg=uk_stemmer
-
-download Cube
-it can take time: 50 dialogs with 100 messages = 42 min
-
-## word_frequency_in_dialogs.ipynb
-
-### Preparing
-1) In console input: import nltk; nltk.download()
-
-2) Install (or update) NLP-Cube with:
-`pip3 install -U nlpcube`
-
-3) Use telegram-data-collection/0_download_dialogs_list.py and 1_download_dialogs_data.py
-to get some files to analyse (DO NOT forget to change global variables of paths to dirs at the beginning of the module)
-
-
 # Dialogs to Value
 
 ![](https://img.shields.io/badge/-status:wip-5319e7.svg)
@@ -58,12 +37,26 @@ year, number of received or sent messages, people with whom and when communicate
 ![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/Weekly%20active%20minutes%20in%20Telegram.png)
 ![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/Monthly%20active%20minutes%20in%20Telegram.png)
 
+![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/day_activity.jpg)
+
 - 3_dialogs_analysis.ipynb -- analysis of each chat of USER and split it on dialogs;
 
 - 4_dialogs_tf_idf.ipynb -- retrieving keywords with TF-IDF algo for each chat;
 
 - 5_dialogs_lda.ipynb -- for each dialog, which we got before, generate topic based on LDA algo
 
+
+## Installation
+
+0. install Python 3.7.4
+1. pip install -r requirements.txt
+2. pip install git+https://github.com/Desklop/Uk_Stemmer@master#egg=uk_stemmer
+3. in console input: import nltk; nltk.download()
+4. install (or update) NLP-Cube with (when you run 0_data_preprocessing.py,
+it can take time: 50 dialogs with 100 messages = 42 min, as it is made preprocessing there)
+`pip3 install -U nlpcube`
+5. use telegram-data-collection/0_download_dialogs_list.py and 1_download_dialogs_data.py
+to get some files to analyse (DO NOT forget to change global variables of paths to dirs at the beginning of the module)
 
 # License:
 [MIT](https://choosealicense.com/licenses/mit/)
