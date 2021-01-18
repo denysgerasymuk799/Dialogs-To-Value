@@ -19,7 +19,7 @@ FINAL_DF_NAME = "general_df.csv"
 PATH_TO_PREPARED_DIALOGS = os.path.join("data", "dialogs_prepared")
 
 # folder to save results of modules
-PATH_TO_SAVE_PROCESSED_FILES = os.path.join("data", "processed_dialog_files2")
+PATH_TO_SAVE_PROCESSED_FILES = os.path.join("data", "processed_dialog_files")
 PATH_TO_SAVE_GENERAL_DF = os.path.join(PATH_TO_SAVE_PROCESSED_FILES, FINAL_DF_NAME)
 
 # path to save file with statistics of all members in each dialog

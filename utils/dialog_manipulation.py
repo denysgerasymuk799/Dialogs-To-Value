@@ -141,6 +141,7 @@ def add_sleep_bounds(df: pd.DataFrame) -> dict:
         output['go_bed_hour'].append(sleep_hours[0])
     return output
 
+
 def add_subdialogs_langs(data):
     n_subdialog, n_subdialog_msgs = 1, 0
     start_subdialog_n_row = 0
