@@ -47,16 +47,16 @@ Helps to analyze user’s activity in Telegram:
 
 - 1_dialogs_sentiment_analysis.ipynb -- sentiment analysis of USER during special week;
 
-![](sentiment_result.jpg)
+![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/sentiment_result.jpg)
 
 - 2_calculate_members_statistics.ipynb -- code which collect general statistics (online minutes per week, month,
 year, number of received or sent messages, people with whom and when communicate the most for each dialog);
 
-![](fig_week_received_msgs.png)
-![](fig_week_sent_msgs.png)
+![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/fig_week_received_msgs.png)
+![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/fig_week_sent_msgs.png)
 
-![](Weekly active minutes in Telegram.png)
-![](Monthly active minutes in Telegram.png)
+![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/Weekly%20active%20minutes%20in%20Telegram.png)
+![](https://github.com/denysgerasymuk799/Dialogs-To-Value/blob/master/result_screenshots/Monthly%20active%20minutes%20in%20Telegram.png)
 
 - 3_dialogs_analysis.ipynb -- analysis of each chat of USER and split it on dialogs;
 
