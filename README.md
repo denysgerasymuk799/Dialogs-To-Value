@@ -1,10 +1,13 @@
 # Dialogs to Value
 
+
 ![](https://img.shields.io/badge/-status:wip-5319e7.svg)
 ![](https://img.shields.io/github/license/damoklov/nasa.svg)
 ![](https://img.shields.io/github/languages/code-size/denysgerasymuk799/Dialogs-to-Value.svg)
 ![](https://img.shields.io/github/last-commit/denysgerasymuk799/Dialogs-to-Value.svg)
     
+### Authors: [Denys Herasymuk](https://github.com/denysgerasymuk799), [Markiyan Valyavka](https://github.com/markvalyavka), [Andrew Bek](https://github.com/ReyBroncas)
+
 ## Description: :sparkler:
 
 One of the biggest repositories on Github for analyzing of Telegram messenger data and dialogs of Ukrainian and Russian languages
